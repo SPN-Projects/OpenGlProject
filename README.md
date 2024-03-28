@@ -20,8 +20,13 @@ After that we would add features while refining our game-definitions.
 ## Addition requirments:
   - UI Elemtents
   - Text Dialog
+  - 
+### Additional(things to add):
+  -
 
 # Game-Definitions:
   - Story game
   - 2D
   - Top down
+### Additional(things to add):
+  -
