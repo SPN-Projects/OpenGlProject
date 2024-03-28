@@ -30,3 +30,11 @@ After that we would add features while refining our game-definitions.
   - Top down
 ### Additional(things to add):
   -
+
+# Story Points
+ 1 - low -> Can easly be done without documentation
+ 3 - low mid -> have to look through some documentation but not much
+ 5 - mid -> Have a general idea and i know where i could look it up
+ 8 - high mid -> I know i can do it but it may take a lot of time
+ 13 - High -> no Idea, i think i could do it but it may take a few weeks
+
