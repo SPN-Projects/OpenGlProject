@@ -33,6 +33,7 @@ After that we would add features while refining our game-definitions.
   -
 
 # Story Points
+*We limit our worklfow to 13 story points per week.*
  - 1 - low -> Can easly be done without documentation
  - 3 - low mid -> have to look through some documentation but not much
  - 5 - mid -> Have a general idea and i know where i could look it up
