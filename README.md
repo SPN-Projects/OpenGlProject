@@ -20,6 +20,7 @@ After that we would add features while refining our game-definitions.
 ## Addition requirments:
   - UI Elemtents
   - Text Dialog
+  - Layering shapes
   - 
 ### Additional(things to add):
   -
