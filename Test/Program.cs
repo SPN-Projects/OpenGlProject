@@ -30,7 +30,8 @@ public class Program
             Flags = ContextFlags.ForwardCompatible,
             WindowBorder = WindowBorder.Fixed,
             WindowState = WindowState.Normal,
-            StartVisible = false
+            StartVisible = false,
+            Vsync = GameConfig.VSync ? VSyncMode.On : VSyncMode.Off
         };
 
         Game = new TestGame(GameConstants.Title, nativeWindowSettings: nativeWindowSettings);

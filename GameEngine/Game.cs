@@ -74,6 +74,9 @@ public abstract class Game
     protected void ToggleFullscreen(bool isFullScreen)
         => _nativeWindow.WindowState = isFullScreen ? WindowState.Fullscreen : WindowState.Normal;
 
+    protected void ToggleVSync(bool isVSync)
+        => _nativeWindow.VSync = isVSync ? VSyncMode.On : VSyncMode.Off;
+
     protected abstract void Update(double deltaTime);
     protected abstract void Render(double deltaTime);
     protected abstract void OnResize(int width, int height);
