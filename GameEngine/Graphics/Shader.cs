@@ -14,12 +14,12 @@ public partial class Shader : IDisposable
         => FromName(EngineConstants.DefaultShaderName);
 
     private readonly Dictionary<ShaderType, string> _shaderSources;
-    private string _shaderName;
+    private string? _shaderName;
     private bool _disposedValue;
 
     /// <summary>
     /// Creates a new Shader from the Name of the Shader, within the default Shader Path (e.g. "Default")
-    /// -> Ddefault.vert, Default.frag, Default.geom, ...
+    /// -> Default.vert, Default.frag, Default.geom, ...
     /// </summary>
     /// <param name="name">The name of the Shader</param>
     /// <returns>The new Shader</returns>
@@ -258,6 +258,7 @@ public partial class Shader : IDisposable
         {
             if (disposing)
             {
+                Logger.EngineLogger.Info("Unloading Shader");
                 GL.DeleteProgram(Handle);
             }
 
