@@ -1,5 +1,6 @@
 ﻿using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
 namespace GameEngine;
@@ -27,7 +28,20 @@ public abstract class Game
         _nativeWindow.Load += OnLoad;
         _nativeWindow.UpdateFrame += (args) => Update(args.Time);
         _nativeWindow.RenderFrame += (args) => Render(args.Time);
-        _nativeWindow.FramebufferResize += (args) => OnResize(args.Width, args.Height);
+
+        _nativeWindow.FramebufferResize += (args) =>
+        {
+            if (args.Width != 0 || args.Height != 0)
+            {
+                Logger.EngineLogger.Trace($"Resizing Window to {args.Width}x{args.Height}");
+                OnResize(args.Width, args.Height);
+            }
+            else
+            {
+                Logger.EngineLogger.Trace("Window minimized");
+            }
+        };
+
         _nativeWindow.Closing += (args) =>
         {
             OnUnload();
@@ -56,6 +70,9 @@ public abstract class Game
 
     protected void ToggleWindowVisibility(bool isVisible)
         => _nativeWindow.IsVisible = isVisible;
+
+    protected void ToggleFullscreen(bool isFullScreen)
+        => _nativeWindow.WindowState = isFullScreen ? WindowState.Fullscreen : WindowState.Normal;
 
     protected abstract void Update(double deltaTime);
     protected abstract void Render(double deltaTime);

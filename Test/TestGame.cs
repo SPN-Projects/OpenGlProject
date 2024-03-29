@@ -23,6 +23,8 @@ public class TestGame : Game, IDisposable
 
         ToggleWindowVisibility(true);
 
+        ToggleFullscreen(Program.GameConfig!.Fullscreen);
+
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         // create shader
