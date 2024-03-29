@@ -26,11 +26,13 @@ public class ConfigManager
             var yamlConfig = File.ReadAllText(path);
             var config = deserialize.Deserialize<T>(yamlConfig);
 
+            Logger.EngineLogger.Info($"Loaded config file: {path}");
             return config;
         }
         catch (Exception e)
         {
             Logger.EngineLogger.Error($"Failed to load config file: {path}", e.Message);
+            Logger.EngineLogger.Info($"Creating new config file: {path}");
         }
 
         try
@@ -68,6 +70,8 @@ public class ConfigManager
             _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
             File.WriteAllText(path, yamlConfig);
+
+            Logger.EngineLogger.Info($"Saved config file: {path}");
         }
         catch (Exception e)
         {
