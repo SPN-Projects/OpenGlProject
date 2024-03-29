@@ -10,6 +10,7 @@ public abstract class Game
 {
     private readonly string _windowTitle;
     private readonly GameWindow _nativeWindow;
+    private readonly bool _disposedValue;
 
     /// <summary>
     /// Create a new Game with a title
@@ -29,6 +30,7 @@ public abstract class Game
         _nativeWindow.Load += OnLoad;
         _nativeWindow.UpdateFrame += (args) => Update(args.Time);
         _nativeWindow.RenderFrame += (args) => Render(args.Time);
+        _nativeWindow.FramebufferResize += (args) => OnResize(args.Width, args.Height);
         _nativeWindow.Closing += (args) =>
         {
             OnUnload();
@@ -54,10 +56,15 @@ public abstract class Game
 
     protected abstract void Update(double deltaTime);
     protected abstract void Render(double deltaTime);
+    protected abstract void OnResize(int width, int height);
 
     protected abstract void OnLoad();
     protected abstract void OnUnload();
     protected abstract void OnExit();
+
+    protected void SwapBuffers()
+        => _nativeWindow.SwapBuffers();
+
 
     /// <summary>
     /// Get the customized default game window settings for the OpenTK GameWindow
