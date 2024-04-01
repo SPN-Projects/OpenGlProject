@@ -1,15 +1,18 @@
 ﻿using GameEngine;
 using GameEngine.Graphics;
+using GameEngine.Graphics.Shapes;
 using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Numerics;
 
 namespace Test;
 public class TestGame : Game, IDisposable
 {
     private Shader? _shader;
-    private int _vertexBufferObject;
-    private int _vertexArrayObject;
     private bool _disposedValue;
+    private SpriteBatch _triangleSpriteBatch;
+    private List<Triangle> _shapes = new();
 
     public TestGame(string title) : base(title)
     {
@@ -23,25 +26,53 @@ public class TestGame : Game, IDisposable
 
         // create shader
         _shader = Shader.Default;
+        _triangleSpriteBatch = new SpriteBatch();
+        _triangleSpriteBatch.Load();
 
-        // init triangle vertices
-        float[] vertices =
-        {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f
-        };
+        CreateTestingShapes();
 
-        // create vertex buffer object -> we need to create a buffer object to store the vertices in the GPU memory
-        _vertexBufferObject = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+        _triangleSpriteBatch.Add(_shapes.First());
+        //_triangleSpriteBatch.Add(_shapes[1]);
+        //_triangleSpriteBatch.Add(_shapes[2]);
+    }
 
-        // create vertex array object -> we need to create a vertex array object to store the vertex attribute pointers
-        _vertexArrayObject = GL.GenVertexArray();
-        GL.BindVertexArray(_vertexArrayObject);
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
-        GL.EnableVertexAttribArray(0);
+    private void CreateTestingShapes()
+    {
+        _shapes.Add(new Triangle([
+            -0.5f,
+            -0.5f,
+            0.0f, //Bottom-left vertex
+            0.5f,
+            -0.5f,
+            0.0f, //Bottom-right vertex
+            0.0f,
+            0.5f,
+            0.0f  //Top vertex
+            ]));
+
+        _shapes.Add(new Triangle([
+            0.0f,
+            0.0f,
+            0.0f,
+            0.5f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.5f,
+            0.0f
+        ]));
+
+        _shapes.Add(new Triangle([
+            -0.5f,
+            -0.5f,
+            0.0f,
+            0.0f,
+            -0.5f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f
+        ]));
     }
 
     protected override void OnUnload()
@@ -49,6 +80,23 @@ public class TestGame : Game, IDisposable
 
     protected override void Update(double deltaTime)
     {
+        // Test size Increase
+        if (_keyboardState.IsKeyDown(Keys.Down))
+        {
+            _shapes[0].Size -= 0.01f;
+            _shapes[1].Size -= 0.01f;
+            _shapes[2].Size -= 0.01f;
+            _triangleSpriteBatch.UpdateData();
+        }
+
+        if (_keyboardState.IsKeyDown(Keys.Up))
+        {
+            _shapes[0].Size += 0.01f;
+            _shapes[1].Size += 0.01f;
+            _shapes[2].Size += 0.01f;
+            _triangleSpriteBatch.UpdateData();
+        }
+
     }
 
     protected override void Render(double deltaTime)
@@ -56,8 +104,7 @@ public class TestGame : Game, IDisposable
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
         _shader?.Use();
-        GL.BindVertexArray(_vertexArrayObject);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+        _triangleSpriteBatch.Draw();
 
         SwapBuffers();
     }
@@ -75,8 +122,7 @@ public class TestGame : Game, IDisposable
             if (disposing)
             {
                 _shader?.Dispose();
-                GL.DeleteBuffer(_vertexBufferObject);
-                GL.DeleteVertexArray(_vertexArrayObject);
+                _triangleSpriteBatch?.Dispose();
             }
 
             _disposedValue = true;

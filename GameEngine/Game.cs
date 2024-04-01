@@ -3,6 +3,7 @@ using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace GameEngine;
 
@@ -11,6 +12,7 @@ public abstract class Game
     private readonly string _windowTitle;
     private readonly GameWindow _nativeWindow;
     private readonly bool _disposedValue;
+    protected KeyboardState _keyboardState;
 
     /// <summary>
     /// Create a new Game with a title
@@ -25,6 +27,7 @@ public abstract class Game
         var defaultNativeWindowSettings = GetDefaultNativeWindowSettings();
 
         _nativeWindow = new GameWindow(defaultGameWindowSettings, defaultNativeWindowSettings);
+        _keyboardState = _nativeWindow.KeyboardState;
 
         // Window Event Handler
         _nativeWindow.Load += OnLoad;
