@@ -15,8 +15,8 @@ namespace GameEngine.Graphics
         private bool _disposedValue;
         private int _vertexBufferObject;
         private int _vertexArrayObject;
-        private List<float> vertices = new();
-        private List<Triangle> triangles = new();
+        private List<float> _vertices = new();
+        private List<Triangle> _triangles = new();
 
         public SpriteBatch() 
         {
@@ -24,33 +24,33 @@ namespace GameEngine.Graphics
 
         public void UpdateData() 
         {
-            vertices.Clear();
-            foreach(var triangle in  triangles)
+            _vertices.Clear();
+            foreach(var triangle in  _triangles)
             {
                 foreach (var vertex in triangle.Vertices)
                 {
-                    vertices.Add(vertex.X);
-                    vertices.Add(vertex.Y);
-                    vertices.Add(vertex.Z);
+                    _vertices.Add(vertex.X);
+                    _vertices.Add(vertex.Y);
+                    _vertices.Add(vertex.Z);
                 }
             }
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float), vertices.ToArray(), BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Count * sizeof(float), _vertices.ToArray(), BufferUsageHint.DynamicDraw);
         }
 
         public void Add(Triangle triangle) // todo: change to a tringle class
         {
-            triangles.Add(triangle);
+            _triangles.Add(triangle);
 
             foreach(var vertex in triangle.Vertices)
             {
-                vertices.Add(vertex.X);
-                vertices.Add(vertex.Y);
-                vertices.Add(vertex.Z);
+                _vertices.Add(vertex.X);
+                _vertices.Add(vertex.Y);
+                _vertices.Add(vertex.Z);
             }
             //Update buffer data to fit newly added vertices
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float), vertices.ToArray(), BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Count * sizeof(float), _vertices.ToArray(), BufferUsageHint.StaticDraw);
         }
 
         public void Load()
@@ -61,7 +61,7 @@ namespace GameEngine.Graphics
             GL.BindVertexArray(_vertexArrayObject);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Count * sizeof(float), vertices.ToArray(), BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Count * sizeof(float), _vertices.ToArray(), BufferUsageHint.StaticDraw);
 
             // create vertex array object -> we need to create a vertex array object to store the vertex attribute pointers
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
@@ -71,7 +71,7 @@ namespace GameEngine.Graphics
         public void Draw()
         {
             GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Count);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, _vertices.Count);
         }
 
         protected virtual void Dispose(bool disposing)

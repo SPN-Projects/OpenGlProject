@@ -33,7 +33,6 @@ public class TestGame : Game, IDisposable
 
         _triangleSpriteBatch.Add(_shapes.First());
         //_triangleSpriteBatch.Add(_shapes[1]);
-        //_triangleSpriteBatch.Add(_shapes[2]);
     }
 
     private void CreateTestingShapes()
@@ -73,6 +72,18 @@ public class TestGame : Game, IDisposable
             0.0f,
             0.0f
         ]));
+
+        _shapes.Add(new Triangle([ // something went wrong while scaling and those were the vertice data but somehow they seems to work -> further investigation potential
+            -0.53f,
+            - 0.52f,
+            0.0f,
+            0.53f,
+            -0.52f,
+            0.0f,
+            0.0f,
+            0.539999962f,
+            0.0f
+        ]));
     }
 
     protected override void OnUnload()
@@ -83,20 +94,15 @@ public class TestGame : Game, IDisposable
         // Test size Increase
         if (_keyboardState.IsKeyDown(Keys.Down))
         {
-            _shapes[0].Size -= 0.01f;
-            _shapes[1].Size -= 0.01f;
-            _shapes[2].Size -= 0.01f;
+            _shapes.ForEach(s => s.Size -= 0.01f);
             _triangleSpriteBatch.UpdateData();
         }
 
         if (_keyboardState.IsKeyDown(Keys.Up))
         {
-            _shapes[0].Size += 0.01f;
-            _shapes[1].Size += 0.01f;
-            _shapes[2].Size += 0.01f;
+            _shapes.ForEach(s => s.Size += 0.01f);
             _triangleSpriteBatch.UpdateData();
         }
-
     }
 
     protected override void Render(double deltaTime)
