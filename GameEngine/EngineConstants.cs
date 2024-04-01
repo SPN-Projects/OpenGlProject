@@ -29,4 +29,8 @@ public static class EngineConstants
 
     public const string DefaultVertexShaderPath = "Resources/Shaders/Default.vert";
     public const string DefaultFragmentShaderPath = "Resources/Shaders/Default.frag";
+
+    // Renderer
+    public const int MaxElementCount = 1000;
+    public const int MaxTextureSlots = 32;
 }

@@ -3,7 +3,7 @@ using GameEngine.Utils;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace GameEngine.Graphics;
+namespace GameEngine.Graphics.Shaders;
 public partial class Shader : IDisposable
 {
     public int Handle { get; }
@@ -62,7 +62,7 @@ public partial class Shader : IDisposable
     /// <summary>
     /// Bind the Shader for use (needed before rendering to ensure the Shader is used for the correct buffers)
     /// </summary>
-    public void Use()
+    public void Bind()
         => GL.UseProgram(Handle);
 
     #region SetUniforms
