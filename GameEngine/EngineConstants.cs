@@ -33,4 +33,8 @@ public static class EngineConstants
     // Renderer
     public const int MaxElementCount = 1000;
     public const int MaxTextureSlots = 32;
+
+    // Camera 
+    public const float MinFieldOfView = 45.0f;
+    public const float MaxFieldOfView = 90.0f;
 }

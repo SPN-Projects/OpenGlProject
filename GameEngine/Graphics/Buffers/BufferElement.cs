@@ -13,7 +13,9 @@ public class BufferElement
 
     public bool Normalized { get; }
 
-    public BufferElement(ShaderDataType type, string name, bool normalized = false)
+    public int Divisor { get; internal set; }
+
+    public BufferElement(ShaderDataType type, string name, bool normalized = false, int divisor = 0)
     {
         Name = name;
         Type = type;
@@ -21,5 +23,6 @@ public class BufferElement
         Size = type.Size;
         Offset = 0;
         Normalized = normalized;
+        Divisor = divisor;
     }
 }

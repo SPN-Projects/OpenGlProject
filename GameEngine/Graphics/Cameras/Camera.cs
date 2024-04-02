@@ -1,12 +1,32 @@
 ﻿using OpenTK.Mathematics;
 
 namespace GameEngine.Graphics.Cameras;
-public class Camera
+public abstract class Camera
 {
-    public Matrix4 ViewProjectionMatrix { get; internal set; }
-
-    public Camera(Matrix4? viewProjectionMatrix = null)
+    private Vector3 _position;
+    public Vector3 Position
     {
-        ViewProjectionMatrix = viewProjectionMatrix ?? Matrix4.Identity;
+        get => _position;
+        set
+        {
+            _position = value;
+            UpdateViewProjectionMatrix();
+        }
     }
+
+    protected Matrix4 View { get; set; }
+    protected Matrix4 Projection { get; set; }
+
+    public Matrix4 ViewProjectionMatrix { get; protected set; }
+
+    public Camera()
+    {
+        View = Matrix4.Identity;
+        Projection = Matrix4.Identity;
+        ViewProjectionMatrix = Matrix4.Identity;
+
+        Position = Vector3.Zero;
+    }
+
+    public abstract void UpdateViewProjectionMatrix();
 }

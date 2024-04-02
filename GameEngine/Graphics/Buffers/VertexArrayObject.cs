@@ -12,7 +12,7 @@ public class VertexArrayObject : Buffer
         Handle = GL.GenVertexArray();
     }
 
-    public void AddVertexBufferObject(VertexBufferObject vbo)
+    public void AddVertexBufferObject(VertexBufferObject vbo, int indexStart = 0)
     {
         Bind();
         vbo.Bind();
@@ -22,11 +22,17 @@ public class VertexArrayObject : Buffer
             throw new InvalidOperationException("VertexBufferObject must have a BufferLayout with at least one element.");
         }
 
-        var index = 0;
+        var index = indexStart;
         foreach (var element in vbo.BufferLayout)
         {
             GL.VertexAttribPointer(index, element.ComponentCount, element.Type, element.Normalized, vbo.BufferLayout.Stride, element.Offset);
             GL.EnableVertexAttribArray(index);
+            if (element.Divisor > 0)
+            {
+                GL.VertexAttribDivisor(index, element.Divisor);
+            }
+
+
             index++;
         }
 

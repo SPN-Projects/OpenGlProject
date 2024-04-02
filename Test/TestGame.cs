@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using GameEngine;
-using GameEngine.Enums;
-using GameEngine.Graphics.Buffers;
+﻿using GameEngine;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Rendering;
 using GameEngine.Graphics.Shaders;
@@ -9,28 +6,16 @@ using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using Test.Graphics;
 
 namespace Test;
 public class TestGame : Game, IDisposable
 {
-    private Shader? _shader;
-    private readonly int _vertexBufferObject;
-    private readonly int _vertexArrayObject;
-    private readonly int _elementBufferObject;
-
     private readonly Random _random = new();
+    private QuadBatch? _quadBatch;
 
-    private readonly int _maxElementCount = 1000;
-    private VertexArrayObject _vao;
-    private VertexBufferObject _vbo;
-    private ElementBufferObject _ebo;
-    private List<QuadVertex> _quadVertexBufferList;
-    private Vector4[] _quadVertexPositions;
-
-    private Vector3[] _randomColors;
-
-    private Camera _camera;
+    private PerspectiveCamera _camera;
 
     private bool _disposedValue;
 
@@ -49,61 +34,21 @@ public class TestGame : Game, IDisposable
 
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        // create vertex array object
-        _vao = new VertexArrayObject();
+        _quadBatch = new QuadBatch(10000, Shader.Default);
 
-        // Vertex Buffer Object + Buffer Layout
-        _vbo = new VertexBufferObject(_maxElementCount + Marshal.SizeOf(typeof(QuadVertex)), BufferUsageHint.StaticDraw);
-        var quadLayout = new BufferLayout(
-        [
-            new(ShaderDataType.Float3, "aPosition"),
-            new(ShaderDataType.Float3, "aColor")
-        ]);
-
-        _vbo.SetBufferLayout(quadLayout);
-        _vao.AddVertexBufferObject(_vbo);
-
-        // Element Buffer Object
-        var offset = 0;
-        var quadIndicesCount = _maxElementCount * 6;
-        var quadIndices = new uint[quadIndicesCount];
-        for (var i = 0; i < quadIndicesCount; i += 6)
+        for (var i = 0; i < 10000; i++)
         {
-            quadIndices[i + 0] = (uint)(offset + 0);
-            quadIndices[i + 1] = (uint)(offset + 1);
-            quadIndices[i + 2] = (uint)(offset + 2);
-            quadIndices[i + 3] = (uint)(offset + 2);
-            quadIndices[i + 4] = (uint)(offset + 3);
-            quadIndices[i + 5] = (uint)(offset + 0);
+            var position = new Vector3(_random.Next(-100, 100), _random.Next(-100, 100), _random.Next(-100, 100));
+            var size = new Vector2(_random.Next(1, 10), _random.Next(1, 10));
+            var color = new Vector4(_random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, 1.0f);
 
-            offset += 6;
+            _quadBatch.Quads.Add(new Quad(position, size, color));
         }
 
-        _ebo = new ElementBufferObject(quadIndices, quadIndicesCount, BufferUsageHint.StaticDraw);
-        _vao.SetElementBufferObject(_ebo);
-
-        var maxVertices = _maxElementCount * 4;
-        _quadVertexBufferList = new(maxVertices);
-        _quadVertexPositions =
-        [
-            new(-0.5f, -0.5f, 0.0f, 1.0f),
-            new(0.5f, -0.5f, 0.0f, 1.0f),
-            new(0.5f, 0.5f, 0.0f, 1.0f),
-            new(-0.5f, 0.5f, 0.0f, 1.0f)
-        ];
-
-        // create shader
-        _shader = Shader.Default;
-
-        _randomColors = [
-            new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle()),
-            new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle()),
-            new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle()),
-            new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle())
-        ];
-
-        _camera = new Camera(Matrix4.CreateTranslation(new(1280 / 2, 720 / 2, 0)) * Matrix4.CreateOrthographicOffCenter(0, 1280, 720, 0, -1.0f, 1.0f));
-        //_camera = new Camera();
+        _camera = new PerspectiveCamera(90f, (float)NativeWindow.ClientSize.X / NativeWindow.ClientSize.Y, 0.1f, 1000.0f)
+        {
+            Position = new Vector3(0, 0, 2)
+        };
     }
 
     protected override void OnUnload()
@@ -115,32 +60,68 @@ public class TestGame : Game, IDisposable
 
     protected override void Update(double deltaTime)
     {
+        var speed = 6f;
+        var shiftSpeed = 4f;
+        var direction = Vector3.Zero;
+
+        if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Space))
+        {
+            direction += new Vector3(0, 1, 0);
+        }
+
+        if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.C))
+        {
+            direction += new Vector3(0, -1, 0);
+        }
+
+        if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.A))
+        {
+            direction += new Vector3(-1, 0, 0);
+        }
+
+        if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.D))
+        {
+            direction += new Vector3(1, 0, 0);
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.W))
+        {
+            direction += new Vector3(0, 0, -1);
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.S))
+        {
+            direction += new Vector3(0, 0, 1);
+        }
+
+        if (direction != Vector3.Zero)
+        {
+            direction.Normalize();
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.LeftShift))
+        {
+            direction *= shiftSpeed;
+        }
+
+
+        _camera.Position += direction * (float)(speed * deltaTime);
+
+
+        // Zooming
+        if (MouseState.ScrollDelta.Y != 0)
+        {
+            _camera.FieldOfView -= MouseState.ScrollDelta.Y * 1f;
+        }
     }
 
     protected override void Render(double deltaTime)
     {
-        GL.Clear(ClearBufferMask.ColorBufferBit);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         Renderer.BeginScene(_camera);
-        _quadVertexBufferList.Clear();
-        for (var i = 0; i < _quadVertexPositions.Length; i++)
-        {
-            var quad = new QuadVertex
-            {
-                Position = (Matrix4.CreateScale(100, 100, 0) * _quadVertexPositions[i]).Xyz,
-                Color = _randomColors[i]
-            };
 
-            _quadVertexBufferList.Add(quad);
-        }
-
-        _vbo.SetData(_quadVertexBufferList);
-        _shader!.Bind();
-        _shader.SetUniform("uViewProjectionMatrix", _camera.ViewProjectionMatrix);
-
-        _vao.Bind();
-        var drawCount = _vao.ElementBufferObject!.Count;
-        GL.DrawElements(PrimitiveType.Triangles, drawCount, DrawElementsType.UnsignedInt, 0);
+        _quadBatch!.Draw(_camera);
 
         Renderer.EndScene();
     }
@@ -157,13 +138,7 @@ public class TestGame : Game, IDisposable
         {
             if (disposing)
             {
-                _shader?.Dispose();
-
-                Logger.GameLogger.Info("Unloading Buffer Object");
-                GL.DeleteBuffer(_vertexBufferObject);
-
-                Logger.GameLogger.Info("Unloading Vertex Array Object");
-                GL.DeleteVertexArray(_vertexArrayObject);
+                _quadBatch?.Dispose();
             }
 
             _disposedValue = true;
