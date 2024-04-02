@@ -1,6 +1,17 @@
-﻿namespace Test.Graphics;
+﻿using OpenTK.Mathematics;
+
+namespace Test.Graphics;
 internal struct QuadVertex
 {
-    public OpenTK.Mathematics.Vector3 Position { get; set; }
-    public OpenTK.Mathematics.Vector4 Color { get; set; }
+    public Vector3 Position { get; set; }
+}
+
+internal struct QuadVertexModel
+{
+    public Matrix4 Model { get; set; }
+}
+
+internal struct QuadVertexColor
+{
+    public Vector4 Color { get; set; }
 }

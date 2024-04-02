@@ -47,7 +47,7 @@ public class TestGame : Game, IDisposable
 
         _quadBatch.RecalculateQuadsModels();
 
-        _camera = new PerspectiveCamera(90f, (float)NativeWindow.ClientSize.X / NativeWindow.ClientSize.Y, 0.1f, 1000.0f)
+        _camera = new PerspectiveCamera(90f, (float)NativeWindow.ClientSize.X / NativeWindow.ClientSize.Y, 0.1f, 100000.0f)
         {
             Position = new Vector3(0, 0, 2)
         };
@@ -63,7 +63,7 @@ public class TestGame : Game, IDisposable
     protected override void Update(double deltaTime)
     {
         var speed = 6f;
-        var shiftSpeed = 8f;
+        var shiftSpeed = 80f;
         var direction = Vector3.Zero;
 
         if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Space))

@@ -34,6 +34,7 @@ public class QuadBatch : IDisposable
     private VertexArrayObject? _vao;
     private VertexBufferObject? _vbo;
     private VertexBufferObject? _instancedVbo;
+    private VertexBufferObject? _instanceColorVbo;
     private ElementBufferObject? _ebo;
 
     private List<QuadVertex> _quadVertexBufferList;
@@ -65,13 +66,12 @@ public class QuadBatch : IDisposable
         var quadLayout = new BufferLayout(
         [
             new(ShaderDataType.Float3, "aPosition"),
-            new(ShaderDataType.Float4, "aColor")
         ]);
 
         _vbo.SetBufferLayout(quadLayout);
         _vao.AddVertexBufferObject(_vbo);
 
-        _instancedVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(Matrix4)), BufferUsageHint.StaticDraw);
+        _instancedVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(QuadVertexModel)), BufferUsageHint.StaticDraw);
         var instancedLayout = new BufferLayout(
                    [
             new(ShaderDataType.Float4, "aModel", false, 1),
@@ -81,7 +81,16 @@ public class QuadBatch : IDisposable
         ]);
 
         _instancedVbo.SetBufferLayout(instancedLayout);
-        _vao.AddVertexBufferObject(_instancedVbo, 2);
+        _vao.AddVertexBufferObject(_instancedVbo, 1);
+
+        _instanceColorVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(QuadVertexColor)), BufferUsageHint.StaticDraw);
+        var instanceColorLayout = new BufferLayout(
+                   [
+            new(ShaderDataType.Float4, "aColor", false, 1)
+        ]);
+
+        _instanceColorVbo.SetBufferLayout(instanceColorLayout);
+        _vao.AddVertexBufferObject(_instanceColorVbo, 5);
 
         // Element Buffer Object
         var offset = 0;
@@ -111,7 +120,6 @@ public class QuadBatch : IDisposable
             var quadVertex = new QuadVertex
             {
                 Position = _quadVertexPositions[i].Xyz,
-                Color = new(1.0f)
             };
 
             quadVertices[i] = quadVertex;
@@ -136,12 +144,17 @@ public class QuadBatch : IDisposable
     public void RecalculateQuadsModels()
     {
         var modelList = new List<Matrix4>();
+        var colorList = new List<Vector4>();
         foreach (var quad in _quads)
         {
+            var color = quad.Color;
             var model = Matrix4.CreateScale(new Vector3(quad.Size.X, quad.Size.Y, 0)) * Matrix4.CreateTranslation(-quad.Position);
+
+            colorList.Add(color);
             modelList.Add(model);
         }
 
+        _instanceColorVbo!.SetData(colorList);
         _instancedVbo!.SetData(modelList);
     }
 
@@ -154,7 +167,6 @@ public class QuadBatch : IDisposable
         Shader.SetUniform("uViewProjectionMatrix", camera.ViewProjectionMatrix);
 
         _vao!.Bind();
-        //GL.DrawElements(PrimitiveType.Triangles, drawCount, DrawElementsType.UnsignedInt, 0);
         GL.DrawElementsInstanced(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0, _quads.Count);
     }
 
@@ -165,6 +177,7 @@ public class QuadBatch : IDisposable
             if (disposing)
             {
                 _vao?.Dispose();
+                _instancedVbo?.Dispose();
                 _vbo?.Dispose();
                 _ebo?.Dispose();
 
