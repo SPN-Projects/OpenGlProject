@@ -34,16 +34,18 @@ public class TestGame : Game, IDisposable
 
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        _quadBatch = new QuadBatch(10000, Shader.Default);
+        _quadBatch = new QuadBatch(10000000, Shader.Default);
 
-        for (var i = 0; i < 10000; i++)
+        for (var i = 0; i < 10000000; i++)
         {
-            var position = new Vector3(_random.Next(-100, 100), _random.Next(-100, 100), _random.Next(-100, 100));
-            var size = new Vector2(_random.Next(1, 10), _random.Next(1, 10));
+            var position = new Vector3(_random.Next(-1000, 1000), _random.Next(-1000, 1000), _random.Next(-1000, 1000));
+            var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
             var color = new Vector4(_random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, 1.0f);
 
-            _quadBatch.Quads.Add(new Quad(position, size, color));
+            _quadBatch.AddQuad(new Quad(position, size, color));
         }
+
+        _quadBatch.RecalculateQuadsModels();
 
         _camera = new PerspectiveCamera(90f, (float)NativeWindow.ClientSize.X / NativeWindow.ClientSize.Y, 0.1f, 1000.0f)
         {
@@ -61,7 +63,7 @@ public class TestGame : Game, IDisposable
     protected override void Update(double deltaTime)
     {
         var speed = 6f;
-        var shiftSpeed = 4f;
+        var shiftSpeed = 8f;
         var direction = Vector3.Zero;
 
         if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Space))

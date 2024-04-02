@@ -24,15 +24,16 @@ public class Quad
 
 public class QuadBatch : IDisposable
 {
-    public List<Quad> Quads { get; set; }
 
     public Shader Shader { get; set; }
+    private readonly List<Quad> _quads;
 
     private bool _disposedValue;
     private readonly int _quadsLimit;
 
     private VertexArrayObject? _vao;
     private VertexBufferObject? _vbo;
+    private VertexBufferObject? _instancedVbo;
     private ElementBufferObject? _ebo;
 
     private List<QuadVertex> _quadVertexBufferList;
@@ -49,7 +50,7 @@ public class QuadBatch : IDisposable
         _quadsLimit = quadsLimit;
         _quadVertexBufferList = [];
         Shader = quadShader;
-        Quads = [];
+        _quads = [];
 
         InitBuffers();
     }
@@ -69,6 +70,18 @@ public class QuadBatch : IDisposable
 
         _vbo.SetBufferLayout(quadLayout);
         _vao.AddVertexBufferObject(_vbo);
+
+        _instancedVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(Matrix4)), BufferUsageHint.StaticDraw);
+        var instancedLayout = new BufferLayout(
+                   [
+            new(ShaderDataType.Float4, "aModel", false, 1),
+            new(ShaderDataType.Float4, "aModel", false, 1),
+            new(ShaderDataType.Float4, "aModel", false, 1),
+            new(ShaderDataType.Float4, "aModel", false, 1)
+        ]);
+
+        _instancedVbo.SetBufferLayout(instancedLayout);
+        _vao.AddVertexBufferObject(_instancedVbo, 2);
 
         // Element Buffer Object
         var offset = 0;
@@ -91,13 +104,27 @@ public class QuadBatch : IDisposable
 
         var maxVertices = _quadsLimit * 4;
         _quadVertexBufferList = new(maxVertices);
+
+        var quadVertices = new QuadVertex[4];
+        for (var i = 0; i < _quadVertexPositions.Length; i++)
+        {
+            var quadVertex = new QuadVertex
+            {
+                Position = _quadVertexPositions[i].Xyz,
+                Color = new(1.0f)
+            };
+
+            quadVertices[i] = quadVertex;
+        }
+
+        _vbo.SetData(quadVertices.ToList());
     }
 
     public void AddQuad(Quad quad)
     {
-        if (Quads.Count < _quadsLimit)
+        if (_quads.Count < _quadsLimit)
         {
-            Quads.Add(quad);
+            _quads.Add(quad);
         }
         else
         {
@@ -106,41 +133,29 @@ public class QuadBatch : IDisposable
         }
     }
 
+    public void RecalculateQuadsModels()
+    {
+        var modelList = new List<Matrix4>();
+        foreach (var quad in _quads)
+        {
+            var model = Matrix4.CreateScale(new Vector3(quad.Size.X, quad.Size.Y, 0)) * Matrix4.CreateTranslation(-quad.Position);
+            modelList.Add(model);
+        }
+
+        _instancedVbo!.SetData(modelList);
+    }
+
     public void Draw(Camera? camera)
     {
         camera ??= new IdentityCamera();
 
-        _quadVertexBufferList!.Clear();
-        var indicesCount = 0;
-
-        foreach (var quad in Quads)
-        {
-            var quadVertices = new QuadVertex[4];
-            var model = Matrix4.CreateScale(new Vector3(quad.Size.X, quad.Size.Y, 0)) * Matrix4.CreateTranslation(-quad.Position);
-
-            for (var i = 0; i < _quadVertexPositions.Length; i++)
-            {
-                var quadVertex = new QuadVertex
-                {
-                    Position = (_quadVertexPositions[i] * model).Xyz,
-                    Color = quad.Color
-                };
-
-                quadVertices[i] = quadVertex;
-            }
-
-            _quadVertexBufferList.AddRange(quadVertices);
-            indicesCount += 6;
-        }
-
-        _vbo!.SetData(_quadVertexBufferList);
         Shader!.Bind();
 
         Shader.SetUniform("uViewProjectionMatrix", camera.ViewProjectionMatrix);
 
         _vao!.Bind();
-        var drawCount = indicesCount;
-        GL.DrawElements(PrimitiveType.Triangles, drawCount, DrawElementsType.UnsignedInt, 0);
+        //GL.DrawElements(PrimitiveType.Triangles, drawCount, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElementsInstanced(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0, _quads.Count);
     }
 
     protected virtual void Dispose(bool disposing)
