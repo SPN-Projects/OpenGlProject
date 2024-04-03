@@ -1,5 +1,4 @@
-﻿using GameEngine.Extensions;
-using GameEngine.Logging;
+﻿using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -10,7 +9,6 @@ public abstract class Game
 {
     private readonly string _windowTitle;
     private readonly GameWindow _nativeWindow;
-    private readonly bool _disposedValue;
 
     /// <summary>
     /// Create a new Game with a title
@@ -18,11 +16,11 @@ public abstract class Game
     /// Subscribe to the Window Events
     /// </summary>
     /// <param name="title"></param>
-    public Game(string title)
+    public Game(string title, GameWindowSettings? gameWindowSettings, NativeWindowSettings? nativeWindowSettings)
     {
         _windowTitle = title;
-        var defaultGameWindowSettings = GetDefaultGameWindowSettings();
-        var defaultNativeWindowSettings = GetDefaultNativeWindowSettings();
+        var defaultGameWindowSettings = gameWindowSettings ?? GameWindowSettings.Default;
+        var defaultNativeWindowSettings = nativeWindowSettings ?? NativeWindowSettings.Default;
 
         _nativeWindow = new GameWindow(defaultGameWindowSettings, defaultNativeWindowSettings);
 
@@ -30,7 +28,20 @@ public abstract class Game
         _nativeWindow.Load += OnLoad;
         _nativeWindow.UpdateFrame += (args) => Update(args.Time);
         _nativeWindow.RenderFrame += (args) => Render(args.Time);
-        _nativeWindow.FramebufferResize += (args) => OnResize(args.Width, args.Height);
+
+        _nativeWindow.FramebufferResize += (args) =>
+        {
+            if (args.Width != 0 || args.Height != 0)
+            {
+                Logger.EngineLogger.Trace($"Resizing Window to {args.Width}x{args.Height}");
+                OnResize(args.Width, args.Height);
+            }
+            else
+            {
+                Logger.EngineLogger.Trace("Window minimized");
+            }
+        };
+
         _nativeWindow.Closing += (args) =>
         {
             OnUnload();
@@ -54,6 +65,18 @@ public abstract class Game
     protected void Run()
         => _nativeWindow.Run();
 
+    protected void Close()
+        => _nativeWindow.Close();
+
+    protected void ToggleWindowVisibility(bool isVisible)
+        => _nativeWindow.IsVisible = isVisible;
+
+    protected void ToggleFullscreen(bool isFullScreen)
+        => _nativeWindow.WindowState = isFullScreen ? WindowState.Fullscreen : WindowState.Normal;
+
+    protected void ToggleVSync(bool isVSync)
+        => _nativeWindow.VSync = isVSync ? VSyncMode.On : VSyncMode.Off;
+
     protected abstract void Update(double deltaTime);
     protected abstract void Render(double deltaTime);
     protected abstract void OnResize(int width, int height);
@@ -64,36 +87,4 @@ public abstract class Game
 
     protected void SwapBuffers()
         => _nativeWindow.SwapBuffers();
-
-
-    /// <summary>
-    /// Get the customized default game window settings for the OpenTK GameWindow
-    /// </summary>
-    /// <returns>Our custom default <see cref="GameWindowSettings"/> Settings</returns>
-    private static GameWindowSettings GetDefaultGameWindowSettings()
-    {
-        var windowSettings = new GameWindowSettings
-        {
-            UpdateFrequency = 60,
-        };
-
-        return windowSettings;
-    }
-
-    /// <summary>
-    /// Get our customized default native window settings for the OpenTK GameWindow
-    /// </summary>
-    /// <returns>Our custom default <see cref="NativeWindowSettings"/> Settings</returns>
-    private NativeWindowSettings GetDefaultNativeWindowSettings()
-    {
-        var nativeWindowSettings = new NativeWindowSettings
-        {
-            ClientSize = EngineConstants.DefaultWindowSize.ToOpenTKi(),
-            Title = _windowTitle,
-            API = ContextAPI.OpenGL,
-            APIVersion = new Version(4, 6),
-        };
-
-        return nativeWindowSettings;
-    }
 }

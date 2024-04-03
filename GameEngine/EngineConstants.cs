@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using System.Reflection;
 
 namespace GameEngine;
 public static class EngineConstants
@@ -15,7 +15,8 @@ public static class EngineConstants
     public static readonly ConsoleColor ConsoleLoggerCriticalColor = ConsoleColor.DarkRed;
 
     // Engine
-    public static Vector2 DefaultWindowSize = new(1280, 720);
+    // get author of the assembly
+    public static readonly string Organization = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "SPN Projects";
 
     // Shader
     public const string VertexShaderExtension = ".vert";
