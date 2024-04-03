@@ -34,7 +34,12 @@ public abstract class Game
             OnLoad();
         };
 
-        NativeWindow.UpdateFrame += (args) => Update(args.Time);
+        NativeWindow.UpdateFrame += (args) =>
+        {
+            NativeWindow.Title = $"{_windowTitle} - FPS: {1 / args.Time:0.00}";
+            Update(args.Time);
+        };
+
         NativeWindow.RenderFrame += (args) =>
         {
             Render(args.Time);

@@ -9,6 +9,13 @@ out vec4 color;
 
 void main()
 {
-    gl_Position = uViewProjectionMatrix * aModel * vec4(aPosition, 1.0);
+    if(aColor.a == 0.0)
+	{
+		gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+        color = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+	}
+
+    gl_Position = uViewProjectionMatrix * aModel * vec4(aPosition, 1.0);    
     color = aColor;
 }

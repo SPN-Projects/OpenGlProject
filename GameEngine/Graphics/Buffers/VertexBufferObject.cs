@@ -36,10 +36,61 @@ public class VertexBufferObject : Buffer
         Logger.EngineLogger.Trace($"Created Vertex Buffer Object [{Handle}] with size [{size}]");
     }
 
-    public void SetData<T>(List<T> data) where T : struct
+    public void SetData<T>(List<T> data, BufferUsageHint? bufferUsageHint = null) where T : struct
     {
         Bind();
-        GL.BufferData(BufferTarget.ArrayBuffer, data.Count * Marshal.SizeOf(typeof(T)), data.ToArray(), BufferUsageHint);
+
+        if (bufferUsageHint.HasValue)
+        {
+            BufferUsageHint = bufferUsageHint.Value;
+            GL.BufferData(BufferTarget.ArrayBuffer, data.Count * Marshal.SizeOf(typeof(T)), data.ToArray(), BufferUsageHint);
+        }
+        else
+        {
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, data.Count * Marshal.SizeOf(typeof(T)), data.ToArray());
+        }
+    }
+
+    public void SetData<T>(IEnumerable<T> data, BufferUsageHint? bufferUsageHint = null) where T : struct
+    {
+        Bind();
+
+        if (bufferUsageHint.HasValue)
+        {
+            BufferUsageHint = bufferUsageHint.Value;
+            GL.BufferData(BufferTarget.ArrayBuffer, data.Count() * Marshal.SizeOf(typeof(T)), data.ToArray(), BufferUsageHint);
+        }
+        else
+        {
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, data.Count() * Marshal.SizeOf(typeof(T)), data.ToArray());
+        }
+    }
+
+    public void SetData<T>(T[] data, BufferUsageHint? bufferUsageHint = null) where T : struct
+    {
+        Bind();
+
+        if (bufferUsageHint.HasValue)
+        {
+            BufferUsageHint = bufferUsageHint.Value;
+            GL.BufferData(BufferTarget.ArrayBuffer, data.Length * Marshal.SizeOf(typeof(T)), data, BufferUsageHint);
+        }
+        else
+        {
+            GL.BufferSubData(BufferTarget.ArrayBuffer, 0, data.Length * Marshal.SizeOf(typeof(T)), data);
+        }
+    }
+
+    public void SetData<T>(T[] data, int offset) where T : struct
+    {
+        Bind();
+        GL.BufferSubData(BufferTarget.ArrayBuffer, offset, data.Length * Marshal.SizeOf(typeof(T)), data);
+    }
+
+    public void SetData<T>(T data, int offset) where T : struct
+    {
+        Bind();
+        GL.BufferSubData(BufferTarget.ArrayBuffer, offset, Marshal.SizeOf(typeof(T)), ref data);
     }
 
     public void SetBufferLayout(BufferLayout quadLayout)

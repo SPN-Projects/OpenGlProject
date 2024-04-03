@@ -1,8 +1,10 @@
 ﻿using GameEngine;
+using GameEngine.Extensions;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Rendering;
 using GameEngine.Graphics.Shaders;
 using GameEngine.Logging;
+using GameEngine.Math;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Desktop;
@@ -13,11 +15,14 @@ namespace Test;
 public class TestGame : Game, IDisposable
 {
     private readonly Random _random = new();
-    private QuadBatch? _quadBatch;
+    private readonly List<QuadBatch> _quadBatches = [];
 
-    private PerspectiveCamera _camera;
+    private PerspectiveCamera? _camera;
 
     private bool _disposedValue;
+    private bool _isInterpolating;
+    private readonly int _quadCount = 1000000;
+    private readonly int _quadBatchCount = 5;
 
     public TestGame(string title, GameWindowSettings? gameWindowSettings = null, NativeWindowSettings? nativeWindowSettings = null) : base(title, gameWindowSettings, nativeWindowSettings)
     {
@@ -34,18 +39,22 @@ public class TestGame : Game, IDisposable
 
         GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        _quadBatch = new QuadBatch(10000000, Shader.Default);
-
-        for (var i = 0; i < 10000000; i++)
+        for (var i = 0; i < _quadBatchCount; i++)
         {
-            var position = new Vector3(_random.Next(-1000, 1000), _random.Next(-1000, 1000), _random.Next(-1000, 1000));
-            var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
-            var color = new Vector4(_random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, _random.Next(0, 255) / 255f, 1.0f);
+            var quadBatch = new QuadBatch(_quadCount, Shader.Default);
 
-            _quadBatch.AddQuad(new Quad(position, size, color));
+            var quadsBatchColor = new Vector4(_random.NextSingle(), _random.NextSingle(), _random.NextSingle(), 1.0f);
+            for (var j = 0; j < _quadCount; j++)
+            {
+                var position = new Vector3(_random.Next(-1000, 1000), _random.Next(-1000, 1000), _random.Next(-1000, 1000));
+                var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
+
+                quadBatch.AddQuad(new Quad(position, size, quadsBatchColor));
+            }
+
+            quadBatch.RecalculateAll();
+            _quadBatches.Add(quadBatch);
         }
-
-        _quadBatch.RecalculateQuadsModels();
 
         _camera = new PerspectiveCamera(90f, (float)NativeWindow.ClientSize.X / NativeWindow.ClientSize.Y, 0.1f, 100000.0f)
         {
@@ -62,9 +71,16 @@ public class TestGame : Game, IDisposable
 
     protected override void Update(double deltaTime)
     {
-        var speed = 6f;
-        var shiftSpeed = 80f;
+        var speed = 6;
+        var superInterpolationSpeed = 100;
+        var shiftSpeed = 40;
         var direction = Vector3.Zero;
+        var randomCubeCount = _quadCount / 10000;
+
+        if (KeyboardState.IsKeyPressed(Keys.F11))
+        {
+            ToggleFullscreen(!NativeWindow.IsFullscreen);
+        }
 
         if (KeyboardState.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Space))
         {
@@ -103,11 +119,16 @@ public class TestGame : Game, IDisposable
 
         if (KeyboardState.IsKeyDown(Keys.LeftShift))
         {
-            direction *= shiftSpeed;
+            speed *= shiftSpeed;
+            randomCubeCount *= superInterpolationSpeed;
         }
 
+        if (KeyboardState.IsKeyPressed(Keys.Enter))
+        {
+            _isInterpolating = !_isInterpolating;
+        }
 
-        _camera.Position += direction * (float)(speed * deltaTime);
+        _camera!.Position += direction * (float)(speed * deltaTime);
 
 
         // Zooming
@@ -115,6 +136,42 @@ public class TestGame : Game, IDisposable
         {
             _camera.FieldOfView -= MouseState.ScrollDelta.Y * 1f;
         }
+
+        if (_isInterpolating)
+        {
+            InterpolateRandomQuads(randomCubeCount, Vector3.Zero, 100, deltaTime);
+        }
+    }
+
+    private void InterpolateRandomQuads(int randomQuadCount, Vector3 cubePosition, int cubeSize, double deltaTime)
+    {
+        const float interpolationSpeed = 0.55f;
+
+        _ = Parallel.ForEach(_quadBatches, (quadBatch) =>
+        {
+            var randomQuads = quadBatch!.Quads.TakeRandomWithIndex(randomQuadCount);
+
+            _ = Parallel.ForEach(randomQuads, (randomQuad) =>
+            {
+                var squareDistanceToCube = SPNMath.SquareDistance(randomQuad.quad.Position, cubePosition);
+                var isNotInsideCube = squareDistanceToCube > Math.Pow(cubeSize, 2);
+                if (isNotInsideCube)
+                {
+                    randomQuad.quad.Position = SPNMath.Lerp(randomQuad.quad.Position, Vector3.Zero, interpolationSpeed);
+                    randomQuad.quad.IsVisible = true;
+                    randomQuad.quad.Recalculate();
+
+                    if (!quadBatch.InvalidatedQuads.ContainsKey(randomQuad.index))
+                    {
+                        _ = quadBatch.InvalidatedQuads.TryAdd(randomQuad.index, randomQuad.quad);
+                    }
+                    else
+                    {
+                        quadBatch.InvalidatedQuads[randomQuad.index] = randomQuad.quad;
+                    }
+                }
+            });
+        });
     }
 
     protected override void Render(double deltaTime)
@@ -123,7 +180,11 @@ public class TestGame : Game, IDisposable
 
         Renderer.BeginScene(_camera);
 
-        _quadBatch!.Draw(_camera);
+        foreach (var quadBatch in _quadBatches)
+        {
+            quadBatch!.Draw(_camera, [.. quadBatch.InvalidatedQuads]);
+            quadBatch.InvalidatedQuads.Clear();
+        }
 
         Renderer.EndScene();
     }
@@ -140,7 +201,10 @@ public class TestGame : Game, IDisposable
         {
             if (disposing)
             {
-                _quadBatch?.Dispose();
+                foreach (var quadBatch in _quadBatches)
+                {
+                    quadBatch?.Dispose();
+                }
             }
 
             _disposedValue = true;
