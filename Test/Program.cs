@@ -34,6 +34,7 @@ public class Program
             Vsync = GameConfig.VSync ? VSyncMode.On : VSyncMode.Off
         };
 
-        Game = new TestGame(GameConstants.Title, nativeWindowSettings: nativeWindowSettings);
+        using var Game = new TestGame(GameConstants.Title, nativeWindowSettings: nativeWindowSettings);
+        Program.Game = Game;
     }
 }

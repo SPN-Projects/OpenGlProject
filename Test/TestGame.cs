@@ -63,11 +63,7 @@ public class TestGame : Game, IDisposable
     }
 
     protected override void OnUnload()
-    {
-        Logger.GameLogger.Info("Unloading Game...");
-
-        Dispose();
-    }
+        => Logger.GameLogger.Info("Unloading Game...");
 
     protected override void Update(double deltaTime)
     {
