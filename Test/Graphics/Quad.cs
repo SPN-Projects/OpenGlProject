@@ -4,6 +4,7 @@ using GameEngine.Enums;
 using GameEngine.Graphics.Buffers;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Shaders;
+using GameEngine.Graphics.Textures;
 using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -11,6 +12,7 @@ using OpenTK.Mathematics;
 namespace Test.Graphics;
 public class Quad
 {
+    public const int VerticesCount = 4;
     public bool IsValid { get; private set; }
 
     private bool _isVisible;
@@ -67,7 +69,7 @@ public class Quad
         Color = color;
         _originalColor = color;
 
-        IsVisible = false;
+        IsVisible = true;
 
         UpdateModelMatrix();
         Validate();
@@ -86,6 +88,7 @@ public class Quad
 public class QuadBatch : IDisposable
 {
     public Shader Shader { get; set; }
+    public Texture? Texture { get; set; }
     public readonly List<Quad> Quads;
 
     public ConcurrentDictionary<int, Quad> InvalidatedQuads { get; private set; }
@@ -107,9 +110,10 @@ public class QuadBatch : IDisposable
         new(-0.5f, 0.5f, 0.0f, 1.0f)
     ];
 
-    public QuadBatch(int quadsLimit, Shader quadShader)
+    public QuadBatch(int quadsLimit, Shader quadShader, Texture? texture = null)
     {
         _quadsLimit = quadsLimit;
+        Texture = texture;
         Shader = quadShader;
         Quads = [];
         InvalidatedQuads = new ConcurrentDictionary<int, Quad>();
@@ -123,16 +127,13 @@ public class QuadBatch : IDisposable
         _vao = new VertexArrayObject();
 
         // Vertex Buffer Object + Buffer Layout
-        _vbo = new VertexBufferObject(_quadsLimit + Marshal.SizeOf(typeof(QuadVertex)), BufferUsageHint.StaticDraw);
         var quadLayout = new BufferLayout(
         [
             new(ShaderDataType.Float3, "aPosition"),
         ]);
-
-        _vbo.SetBufferLayout(quadLayout);
+        _vbo = VertexBufferObject.FromBufferLayout(quadLayout, BufferUsageHint.StaticDraw, _quadsLimit * Quad.VerticesCount);
         _vao.AddVertexBufferObject(_vbo);
 
-        _instancedVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(QuadVertexModel)), BufferUsageHint.StaticDraw);
         var instancedLayout = new BufferLayout(
                    [
             new(ShaderDataType.Float4, "aModel", false, 1),
@@ -140,18 +141,15 @@ public class QuadBatch : IDisposable
             new(ShaderDataType.Float4, "aModel", false, 1),
             new(ShaderDataType.Float4, "aModel", false, 1)
         ]);
+        _instancedVbo = VertexBufferObject.FromBufferLayout(instancedLayout, BufferUsageHint.StaticDraw, _quadsLimit);
+        _vao.AddVertexBufferObject(_instancedVbo);
 
-        _instancedVbo.SetBufferLayout(instancedLayout);
-        _vao.AddVertexBufferObject(_instancedVbo, 1);
-
-        _instanceColorVbo = new VertexBufferObject(_quadsLimit * Marshal.SizeOf(typeof(QuadVertexColor)), BufferUsageHint.StaticDraw);
         var instanceColorLayout = new BufferLayout(
                    [
             new(ShaderDataType.Float4, "aColor", false, 1)
         ]);
-
-        _instanceColorVbo.SetBufferLayout(instanceColorLayout);
-        _vao.AddVertexBufferObject(_instanceColorVbo, 5);
+        _instanceColorVbo = VertexBufferObject.FromBufferLayout(instanceColorLayout, BufferUsageHint.StaticDraw, _quadsLimit);
+        _vao.AddVertexBufferObject(_instanceColorVbo);
 
         // Element Buffer Object
         var offset = 0;
@@ -183,7 +181,7 @@ public class QuadBatch : IDisposable
             quadVertices[i] = quadVertex;
         }
 
-        _vbo.SetData(quadVertices.ToList());
+        _vbo.SetData(quadVertices);
     }
 
     public void AddQuad(Quad quad)

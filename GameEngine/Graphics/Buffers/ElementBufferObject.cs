@@ -16,7 +16,7 @@ public class ElementBufferObject : Buffer
         Bind();
 
         // allocate memory for the buffer
-        GL.BufferData(BufferTarget.ElementArrayBuffer, count, indices, bufferUsageHint);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, count * sizeof(uint), indices, bufferUsageHint);
 
         Logger.EngineLogger.Trace($"Created Element Buffer Object [{Handle}] with size [{count}]");
     }

@@ -36,6 +36,16 @@ public class VertexBufferObject : Buffer
         Logger.EngineLogger.Trace($"Created Vertex Buffer Object [{Handle}] with size [{size}]");
     }
 
+    public static VertexBufferObject FromBufferLayout(BufferLayout bufferLayout, BufferUsageHint bufferUsageHint, int predefinedVertexCount)
+    {
+        var vbo = new VertexBufferObject(predefinedVertexCount * bufferLayout.Stride, bufferUsageHint)
+        {
+            BufferLayout = bufferLayout
+        };
+
+        return vbo;
+    }
+
     public void SetData<T>(List<T> data, BufferUsageHint? bufferUsageHint = null) where T : struct
     {
         Bind();

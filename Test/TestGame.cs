@@ -22,9 +22,9 @@ public class TestGame : Game, IDisposable
 
     private bool _disposedValue;
     private bool _isInterpolating;
-    private readonly int _quadCount = 4;
+    private readonly int _quadCount = 1;
     private readonly int _quadBatchCount = 1;
-    private readonly int _spawnDistance = 10;
+    private readonly int _spawnDistance = 5;
     private readonly int _endDistance = 1;
     private readonly int _randomQuadPercentage = 1;
 
