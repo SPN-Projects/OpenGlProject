@@ -3,6 +3,7 @@ using GameEngine.Extensions;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Rendering;
 using GameEngine.Graphics.Shaders;
+using GameEngine.Graphics.Textures;
 using GameEngine.Logging;
 using GameEngine.Math;
 using OpenTK.Graphics.OpenGL4;
@@ -21,8 +22,11 @@ public class TestGame : Game, IDisposable
 
     private bool _disposedValue;
     private bool _isInterpolating;
-    private readonly int _quadCount = 1000000;
-    private readonly int _quadBatchCount = 5;
+    private readonly int _quadCount = 4;
+    private readonly int _quadBatchCount = 1;
+    private readonly int _spawnDistance = 10;
+    private readonly int _endDistance = 1;
+    private readonly int _randomQuadPercentage = 1;
 
     public TestGame(string title, GameWindowSettings? gameWindowSettings = null, NativeWindowSettings? nativeWindowSettings = null) : base(title, gameWindowSettings, nativeWindowSettings)
     {
@@ -41,12 +45,12 @@ public class TestGame : Game, IDisposable
 
         for (var i = 0; i < _quadBatchCount; i++)
         {
-            var quadBatch = new QuadBatch(_quadCount, Shader.Default);
+            var quadBatch = new QuadBatch(_quadCount, Shader.Default, Texture.Default);
 
             var quadsBatchColor = new Vector4(_random.NextSingle(), _random.NextSingle(), _random.NextSingle(), 1.0f);
             for (var j = 0; j < _quadCount; j++)
             {
-                var position = new Vector3(_random.Next(-1000, 1000), _random.Next(-1000, 1000), _random.Next(-1000, 1000));
+                var position = new Vector3(_random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance));
                 var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
 
                 quadBatch.AddQuad(new Quad(position, size, quadsBatchColor));
@@ -71,7 +75,7 @@ public class TestGame : Game, IDisposable
         var superInterpolationSpeed = 100;
         var shiftSpeed = 40;
         var direction = Vector3.Zero;
-        var randomCubeCount = _quadCount / 10000;
+        var randomCubeCount = _quadCount / 100 * _randomQuadPercentage;
 
         if (KeyboardState.IsKeyPressed(Keys.F11))
         {
@@ -135,11 +139,11 @@ public class TestGame : Game, IDisposable
 
         if (_isInterpolating)
         {
-            InterpolateRandomQuads(randomCubeCount, Vector3.Zero, 100, deltaTime);
+            InterpolateRandomQuads(randomCubeCount, Vector3.Zero, _endDistance);
         }
     }
 
-    private void InterpolateRandomQuads(int randomQuadCount, Vector3 cubePosition, int cubeSize, double deltaTime)
+    private void InterpolateRandomQuads(int randomQuadCount, Vector3 cubePosition, int cubeSize)
     {
         const float interpolationSpeed = 0.55f;
 
@@ -174,7 +178,7 @@ public class TestGame : Game, IDisposable
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        Renderer.BeginScene(_camera);
+        Renderer.BeginScene(_camera!);
 
         foreach (var quadBatch in _quadBatches)
         {

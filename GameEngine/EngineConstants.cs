@@ -30,6 +30,9 @@ public static class EngineConstants
     public const string DefaultVertexShaderPath = "Resources/Shaders/Default.vert";
     public const string DefaultFragmentShaderPath = "Resources/Shaders/Default.frag";
 
+    // Textures
+    public const string DefaultTexturePath = "Resources/Textures/Default.jpg";
+
     // Renderer
     public const int MaxElementCount = 1000;
     public const int MaxTextureSlots = 32;
@@ -37,4 +40,5 @@ public static class EngineConstants
     // Camera 
     public const float MinFieldOfView = 45.0f;
     public const float MaxFieldOfView = 90.0f;
+
 }

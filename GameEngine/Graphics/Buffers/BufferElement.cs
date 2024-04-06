@@ -2,27 +2,15 @@
 
 namespace GameEngine.Graphics.Buffers;
 
-public class BufferElement
+public class BufferElement(ShaderDataType type, string name, bool normalized = false, int divisor = 0)
 {
-    public string Name { get; }
-    public ShaderDataType Type { get; }
+    public string Name { get; } = name;
+    public ShaderDataType Type { get; } = type;
 
-    public int ComponentCount { get; }
-    public int Size { get; }
-    public int Offset { get; internal set; }
+    public int ComponentCount { get; } = type.Count;
+    public int Size { get; } = type.Size;
+    public int Offset { get; internal set; } = 0;
+    public bool Normalized { get; } = normalized;
 
-    public bool Normalized { get; }
-
-    public int Divisor { get; internal set; }
-
-    public BufferElement(ShaderDataType type, string name, bool normalized = false, int divisor = 0)
-    {
-        Name = name;
-        Type = type;
-        ComponentCount = type.Count;
-        Size = type.Size;
-        Offset = 0;
-        Normalized = normalized;
-        Divisor = divisor;
-    }
+    public int Divisor { get; internal set; } = divisor;
 }

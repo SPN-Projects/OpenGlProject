@@ -24,5 +24,8 @@ public class UniformBuffer : IDisposable
         => GL.NamedBufferSubData(Handle, offset, Marshal.SizeOf(data), ref data);
 
     public void Dispose()
-        => GL.DeleteBuffer(Handle);
+    {
+        GL.DeleteBuffer(Handle);
+        GC.SuppressFinalize(this);
+    }
 }
