@@ -30,7 +30,6 @@ public class Texture : IDisposable
 
         GL.TextureParameter(Handle, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
         GL.TextureParameter(Handle, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-
     }
 
     public static Texture FromFile(string path)
@@ -63,7 +62,7 @@ public class Texture : IDisposable
         Data = data;
 
         Bind();
-        GL.TextureSubImage2D(Handle, 0, 0, 0, Width, Height, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, Width, Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
 
         if (createMipmap)
         {

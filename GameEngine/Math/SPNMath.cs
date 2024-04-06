@@ -17,4 +17,11 @@ public static class SPNMath
 
     public static double SquareDistance(Vector3 position, Vector3 cubePosition)
         => MathF.Pow(position.X - cubePosition.X, 2) + MathF.Pow(position.Y - cubePosition.Y, 2) + MathF.Pow(position.Z - cubePosition.Z, 2);
+    public static double Distance(Vector3 position, Vector3 target)
+    {
+        var x = MathF.Pow(target.X - position.X, 2);
+        var y = MathF.Pow(target.Y - position.Y, 2);
+        var z = MathF.Pow(target.Z - position.Z, 2);
+        return MathF.Sqrt(x + y + z);
+    }
 }

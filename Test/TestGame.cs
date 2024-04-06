@@ -22,11 +22,11 @@ public class TestGame : Game, IDisposable
 
     private bool _disposedValue;
     private bool _isInterpolating;
-    private readonly int _quadCount = 1;
-    private readonly int _quadBatchCount = 1;
-    private readonly int _spawnDistance = 5;
-    private readonly int _endDistance = 1;
-    private readonly int _randomQuadPercentage = 1;
+    private readonly int _quadCount = 1000000;
+    private readonly int _quadBatchCount = 3;
+    private readonly int _spawnDistance = 1000;
+    private readonly int _endDistance = 10;
+    private readonly int _randomQuadPercentage = 2;
 
     public TestGame(string title, GameWindowSettings? gameWindowSettings = null, NativeWindowSettings? nativeWindowSettings = null) : base(title, gameWindowSettings, nativeWindowSettings)
     {
@@ -52,8 +52,14 @@ public class TestGame : Game, IDisposable
             {
                 var position = new Vector3(_random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance));
                 var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
+                var rotation = new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle());
 
-                quadBatch.AddQuad(new Quad(position, size, quadsBatchColor));
+                var newQuad = new Quad(position, size, quadsBatchColor)
+                {
+                    Rotation = rotation
+                };
+
+                quadBatch.AddQuad(newQuad);
             }
 
             quadBatch.RecalculateAll();
@@ -76,6 +82,7 @@ public class TestGame : Game, IDisposable
         var shiftSpeed = 40;
         var direction = Vector3.Zero;
         var randomCubeCount = _quadCount / 100 * _randomQuadPercentage;
+        var interpolationSpeed = 0.35f;
 
         if (KeyboardState.IsKeyPressed(Keys.F11))
         {
@@ -120,7 +127,7 @@ public class TestGame : Game, IDisposable
         if (KeyboardState.IsKeyDown(Keys.LeftShift))
         {
             speed *= shiftSpeed;
-            randomCubeCount *= superInterpolationSpeed;
+            interpolationSpeed *= superInterpolationSpeed;
         }
 
         if (KeyboardState.IsKeyPressed(Keys.Enter))
@@ -130,7 +137,6 @@ public class TestGame : Game, IDisposable
 
         _camera!.Position += direction * (float)(speed * deltaTime);
 
-
         // Zooming
         if (MouseState.ScrollDelta.Y != 0)
         {
@@ -139,39 +145,27 @@ public class TestGame : Game, IDisposable
 
         if (_isInterpolating)
         {
-            InterpolateRandomQuads(randomCubeCount, Vector3.Zero, _endDistance);
+            InterpolateRandomQuads(randomCubeCount, interpolationSpeed * (float)deltaTime, Vector3.Zero, _endDistance);
         }
     }
 
-    private void InterpolateRandomQuads(int randomQuadCount, Vector3 cubePosition, int cubeSize)
+    private void InterpolateRandomQuads(int randomQuadCount, float interpolationSpeed, Vector3 cubePosition, int cubeSize)
     {
-        const float interpolationSpeed = 0.55f;
-
-        _ = Parallel.ForEach(_quadBatches, (quadBatch) =>
+        foreach (var quadBatch in _quadBatches)
         {
-            var randomQuads = quadBatch!.Quads.TakeRandomWithIndex(randomQuadCount);
-
-            _ = Parallel.ForEach(randomQuads, (randomQuad) =>
+            var randomQuads = quadBatch.Quads.TakeRandomWithIndex(randomQuadCount);
+            foreach (var quad in randomQuads)
             {
-                var squareDistanceToCube = SPNMath.SquareDistance(randomQuad.quad.Position, cubePosition);
-                var isNotInsideCube = squareDistanceToCube > Math.Pow(cubeSize, 2);
-                if (isNotInsideCube)
+                var squareDistanceToCube = SPNMath.SquareDistance(quad.quad.Position, cubePosition);
+                var isOutsideCube = squareDistanceToCube > Math.Pow(cubeSize, 2);
+                if (isOutsideCube)
                 {
-                    randomQuad.quad.Position = SPNMath.Lerp(randomQuad.quad.Position, Vector3.Zero, interpolationSpeed);
-                    randomQuad.quad.IsVisible = true;
-                    randomQuad.quad.Recalculate();
-
-                    if (!quadBatch.InvalidatedQuads.ContainsKey(randomQuad.index))
-                    {
-                        _ = quadBatch.InvalidatedQuads.TryAdd(randomQuad.index, randomQuad.quad);
-                    }
-                    else
-                    {
-                        quadBatch.InvalidatedQuads[randomQuad.index] = randomQuad.quad;
-                    }
+                    quad.quad.Position = SPNMath.Lerp(quad.quad.Position, cubePosition, interpolationSpeed);
+                    quad.quad.Rotation += new Vector3(1, 0, 0f);
+                    quadBatch.InvalidatedQuads.Add((quad.index, quad.quad));
                 }
-            });
-        });
+            }
+        }
     }
 
     protected override void Render(double deltaTime)
