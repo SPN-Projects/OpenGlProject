@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using GameEngine;
 using GameEngine.Enums;
+using GameEngine.Extensions;
 using GameEngine.Graphics.Buffers;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Shaders;
@@ -92,7 +94,7 @@ public class Quad
 public class QuadBatch : IDisposable
 {
     public Shader Shader { get; set; }
-    public Texture? Texture { get; set; }
+    public Texture2D? Texture { get; set; }
     public readonly List<Quad> Quads;
     public readonly int QuadsLimit;
 
@@ -102,6 +104,8 @@ public class QuadBatch : IDisposable
     private VertexBufferObject? _vbo;
     private VertexBufferObject? _instancedVbo;
     private ElementBufferObject? _ebo;
+
+    private readonly List<Texture2D> _textureSlots;
 
     private static readonly Vector4[] _quadVertexPositions =
     [
@@ -119,12 +123,19 @@ public class QuadBatch : IDisposable
         new(0.0f, 1.0f)
     ];
 
-    public QuadBatch(int quadsLimit, Shader quadShader, Texture? texture = null)
+    public QuadBatch(int quadsLimit, Shader quadShader, Texture2D? texture = null)
     {
         QuadsLimit = quadsLimit;
         Texture = texture;
         Shader = quadShader;
         Quads = [];
+
+        _textureSlots = new(EngineConstants.MaxTextureSlots)
+        {
+            TextureManager.WhiteTexture2D
+        };
+
+        Shader.SetUniform("uTextures", _textureSlots!.ToCapacitySamplers());
 
         InitBuffers();
     }
@@ -150,10 +161,10 @@ public class QuadBatch : IDisposable
             new(ShaderDataType.Float3, "aPosition", false, 1),
             new(ShaderDataType.Float3, "aRotation", false, 1),
             new(ShaderDataType.Float2, "aSize", false, 1),
+            new(ShaderDataType.Float, "aTextureIndex", false, 1)
         ]);
         _instancedVbo = VertexBufferObject.FromBufferLayout(instancedLayout, BufferUsageHint.DynamicDraw, QuadsLimit);
         _vao.AddVertexBufferObject(_instancedVbo);
-
 
         // Element Buffer Object + Data
         var offset = 0;
@@ -213,12 +224,20 @@ public class QuadBatch : IDisposable
         {
             foreach (var (index, quad) in invalidatedQuads)
             {
+                var textureIndex = _textureSlots.IndexOf(Texture!);
+                if (textureIndex == -1)
+                {
+                    textureIndex = _textureSlots.Count;
+                    _textureSlots.Add(Texture!);
+                }
+
                 var instancedData = new QuadInstancedData
                 {
                     Color = quad.Color,
                     Position = quad.Position,
                     Rotation = quad.Rotation,
                     Scale = quad.Scale,
+                    TextureIndex = textureIndex
                 };
 
                 _instancedVbo!.SetData(instancedData, index * Marshal.SizeOf(typeof(QuadInstancedData)));
@@ -230,11 +249,14 @@ public class QuadBatch : IDisposable
     {
         _ = camera ?? new IdentityCamera();
 
-        Shader!.Bind();
-
         RecalculateAll();
 
-        Texture?.Bind();
+        for (var i = 0; i < _textureSlots.Count; i++)
+        {
+            _textureSlots[i].Bind(i);
+        }
+
+        Shader!.Bind();
         _vao!.Bind();
         GL.DrawElementsInstanced(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0, Quads.Count);
     }
@@ -266,6 +288,13 @@ public class QuadBatch : IDisposable
     internal void RecalculateAll()
     {
         var instancedData = new ConcurrentBag<QuadInstancedData>();
+        var textureIndex = _textureSlots.IndexOf(Texture!);
+        if (textureIndex == -1)
+        {
+            textureIndex = _textureSlots.Count;
+            _textureSlots.Add(Texture!);
+        }
+
         _ = Parallel.ForEach(Quads, (quad) =>
         {
             instancedData.Add(new QuadInstancedData
@@ -273,7 +302,8 @@ public class QuadBatch : IDisposable
                 Color = quad.Color,
                 Position = quad.Position,
                 Rotation = quad.Rotation,
-                Scale = quad.Scale
+                Scale = quad.Scale,
+                TextureIndex = textureIndex
             });
         });
 

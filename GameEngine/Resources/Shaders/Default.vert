@@ -5,6 +5,7 @@ layout (location = 2) in vec4 aColor;
 layout (location = 3) in vec3 aTranslation;
 layout (location = 4) in vec3 aRotation;
 layout (location = 5) in vec2 aScale;
+layout (location = 6) in float aTextureIndex;
 
 //uniform mat4 uViewProjectionMatrix;
 
@@ -15,8 +16,10 @@ layout(std140, binding = 0) uniform CameraData
 };
 
 
-out vec4 color;
-out vec2 texCoord;
+out vec4 vColor;
+out vec2 vTexCoord;
+out flat int vTextureIndex;
+
 
 mat4 createRotationXMatrix(float angle)
 {
@@ -69,19 +72,11 @@ mat4 createScaleMatrix(vec3 scale)
 
 void main()
 {
-    // Hide the vertex if the alpha is 0, this doent prevent the vertex from being rendered and the fragment shader from being executed
-    if(aColor.a == 0.0)
-	{
-		gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
-        color = vec4(0.0, 0.0, 0.0, 0.0);
-        texCoord = vec2(0.0, 0.0);
-        return;
-	}
-
 	mat4 cameraModel = createTranslationMatrix(-uCameraPosition.xyz);
 	mat4 aModel = createTranslationMatrix(aTranslation) * createRotationXMatrix(aRotation.x) * createRotationYMatrix(aRotation.y) * createRotationZMatrix(aRotation.z) * createScaleMatrix(vec3(aScale, 1.0));
 
     gl_Position = uProjectionMatrix * cameraModel * aModel * vec4(aPosition, 1.0);    
-    color = aColor;
-    texCoord = aTexCoord;
+    vColor = aColor;
+    vTexCoord = aTexCoord;
+	vTextureIndex = int(aTextureIndex);
 }

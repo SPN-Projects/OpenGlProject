@@ -1,14 +1,19 @@
 ﻿#version 460 core
 #define MAX_TEXTURES 32
 
-in vec4 color;
-in vec2 texCoord;
+in vec4 vColor;
+in vec2 vTexCoord;
+in flat int vTextureIndex;
 
-uniform sampler2D uTexture;
+uniform sampler2D uTextures[MAX_TEXTURES];
 
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = color * texture(uTexture, texCoord);
+    vec4 color = vColor * texture(uTextures[vTextureIndex], vTexCoord);
+    if(color.a < 0.1)
+        discard;
+
+    FragColor = color;
 }

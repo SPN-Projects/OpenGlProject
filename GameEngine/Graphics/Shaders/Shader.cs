@@ -65,54 +65,63 @@ public partial class Shader : IDisposable
     #region SetUniforms
     public void SetUniform(string name, int data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform1(location, data);
     }
 
     public void SetUniform(string name, float data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform1(location, data);
     }
 
     public void SetUniform(string name, Vector2 data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform2(location, data);
     }
 
     public void SetUniform(string name, Vector3 data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform3(location, data);
     }
 
     public void SetUniform(string name, Vector4 data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform4(location, data);
     }
 
     public void SetUniform(string name, Matrix4 data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.UniformMatrix4(location, false, ref data);
     }
 
     public void SetUniform(string name, bool data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform1(location, data ? 1 : 0);
     }
 
     public void SetUniform(string name, int[] data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform1(location, data.Length, data);
     }
 
     public void SetUniform(string name, float[] data)
     {
+        Bind();
         var location = GetUniformLocation(name);
         GL.Uniform1(location, data.Length, data);
     }
@@ -244,6 +253,13 @@ public partial class Shader : IDisposable
         }
 
         var location = GL.GetUniformLocation(Handle, name);
+
+        if (location == -1)
+        {
+            Logger.EngineLogger.Warning($"Uniform {name} not found in Shader ({_shaderName})");
+            throw new InvalidOperationException($"Uniform {name} not found in Shader ({_shaderName})");
+        }
+
         Uniforms.Add(name.GetHashCode(), location);
 
         return location;

@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using GameEngine.Graphics.Buffers;
 using GameEngine.Graphics.Cameras;
+using GameEngine.Graphics.Textures;
 using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -10,6 +11,7 @@ namespace GameEngine.Graphics.Rendering;
 public static class Renderer
 {
     internal static RenderData? RenderData { get; private set; }
+
     public static void Init(Vector4 clearColor, ClearBufferMask clearBufferMask, EnableCap? enableCaps = null)
     {
         if (enableCaps.HasValue)
@@ -48,6 +50,11 @@ public static class Renderer
         RenderData.CameraUniformBuffer.SetData(RenderData.CameraBuffer);
 
         ResetBatch();
+    }
+
+    public static void DrawSprite(Sprite sprite, Vector3 position, Vector2 size, Vector4 color)
+    {
+
     }
 
     public static void EndScene()

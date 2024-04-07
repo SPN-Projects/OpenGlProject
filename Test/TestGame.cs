@@ -22,7 +22,7 @@ public class TestGame : Game, IDisposable
 
     private PerspectiveCamera? _camera;
 
-    private readonly int _quadCount = 100000;
+    private readonly int _quadCount = 1000000;
     private readonly Vector2 _scenePlaneSize = new(1000, 1000);
 
     public TestGame(string title, GameWindowSettings? gameWindowSettings = null, NativeWindowSettings? nativeWindowSettings = null) : base(title, gameWindowSettings, nativeWindowSettings)
@@ -38,15 +38,16 @@ public class TestGame : Game, IDisposable
 
         ToggleFullscreen(Program.GameConfig!.Fullscreen);
 
-        Renderer.Init(new Vector4(0.2f, 0.3f, 0.3f, 1.0f), ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit, EnableCap.DepthTest);
+        Renderer.Init(new Vector4(0.2f, 0.3f, 0.3f, 1.0f), ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit, EnableCap.DepthTest | EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-        var sceneQuadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default);
-        var playersQuadBatch = new QuadBatch(1, ShaderManager.Default, TextureManager.Default);
+        var sceneQuadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default2D);
+        var playersQuadBatch = new QuadBatch(1, ShaderManager.Default, TextureManager.Default2D);
 
         var scenePlaneQuad = new Quad(new Vector3(0, 0, 0), _scenePlaneSize, new Vector4(1.0f));
         sceneQuadBatch.AddQuad(scenePlaneQuad);
 
-        _playerQuad = new Quad(new Vector3(0, 0, 1), new Vector2(10, 10), new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+        _playerQuad = new Quad(new Vector3(0, 0, 1), new Vector2(10, 10), new Vector4(1.0f, 0.0f, 0.0f, 0.5f));
         playersQuadBatch.AddQuad(_playerQuad);
 
         playersQuadBatch.RecalculateAll();

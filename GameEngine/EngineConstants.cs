@@ -32,9 +32,10 @@ public static class EngineConstants
 
     // Textures
     public const string DefaultTexturePath = "Resources/Textures/Default.jpg";
+    public const string WhiteTextureName = "White";
 
     // Renderer
-    public const int MaxElementCount = 1000;
+    public const int MaxElementCount = 100000;
     public const int MaxTextureSlots = 32;
 
     // Camera 
