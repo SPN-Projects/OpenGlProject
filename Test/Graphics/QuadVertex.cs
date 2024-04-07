@@ -12,7 +12,7 @@ internal struct QuadInstancedData
     public Vector4 Color { get; set; }
     public Vector3 Position { get; set; }
     public Vector3 Rotation { get; set; }
-    public Vector2 Size { get; set; }
+    public Vector2 Scale { get; set; }
 }
 
 internal struct QuadVertexColor

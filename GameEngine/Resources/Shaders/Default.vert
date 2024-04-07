@@ -6,7 +6,14 @@ layout (location = 3) in vec3 aTranslation;
 layout (location = 4) in vec3 aRotation;
 layout (location = 5) in vec2 aScale;
 
-uniform mat4 uViewProjectionMatrix;
+//uniform mat4 uViewProjectionMatrix;
+
+layout(std140, binding = 0) uniform CameraData
+{
+  vec4 uCameraPosition;
+  mat4 uProjectionMatrix;
+};
+
 
 out vec4 color;
 out vec2 texCoord;
@@ -71,9 +78,10 @@ void main()
         return;
 	}
 
-	mat4 aModel = createRotationXMatrix(aRotation.x) * createRotationYMatrix(aRotation.y) * createRotationZMatrix(aRotation.z) * createScaleMatrix(vec3(aScale, 1.0)) *  createTranslationMatrix(aTranslation);
+	mat4 cameraModel = createTranslationMatrix(-uCameraPosition.xyz);
+	mat4 aModel = createTranslationMatrix(aTranslation) * createRotationXMatrix(aRotation.x) * createRotationYMatrix(aRotation.y) * createRotationZMatrix(aRotation.z) * createScaleMatrix(vec3(aScale, 1.0));
 
-    gl_Position = uViewProjectionMatrix * aModel * vec4(aPosition, 1.0);    
+    gl_Position = uProjectionMatrix * cameraModel * aModel * vec4(aPosition, 1.0);    
     color = aColor;
     texCoord = aTexCoord;
 }

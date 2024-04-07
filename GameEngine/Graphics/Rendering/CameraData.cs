@@ -3,5 +3,6 @@
 namespace GameEngine.Graphics.Rendering;
 public struct CameraData
 {
-    public Matrix4 ViewProjectionMatrix { get; internal set; }
+    public Vector4 CameraPosition { get; internal set; }
+    public Matrix4 ProjectionMatrix { get; internal set; }
 }

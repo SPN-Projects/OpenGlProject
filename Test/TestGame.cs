@@ -1,5 +1,4 @@
 ﻿using GameEngine;
-using GameEngine.Extensions;
 using GameEngine.Graphics.Cameras;
 using GameEngine.Graphics.Rendering;
 using GameEngine.Graphics.Shaders;
@@ -22,11 +21,12 @@ public class TestGame : Game, IDisposable
 
     private bool _disposedValue;
     private bool _isInterpolating;
-    private readonly int _quadCount = 1000000;
+    private readonly int _quadCount = 100000;
     private readonly int _quadBatchCount = 3;
-    private readonly int _spawnDistance = 1000;
-    private readonly int _endDistance = 10;
+    private readonly int _spawnDistance = 10000;
+    private readonly int _endDistance = 50;
     private readonly int _randomQuadPercentage = 2;
+    private readonly float _interpolationSpeed = 0.5f;
 
     public TestGame(string title, GameWindowSettings? gameWindowSettings = null, NativeWindowSettings? nativeWindowSettings = null) : base(title, gameWindowSettings, nativeWindowSettings)
     {
@@ -45,13 +45,13 @@ public class TestGame : Game, IDisposable
 
         for (var i = 0; i < _quadBatchCount; i++)
         {
-            var quadBatch = new QuadBatch(_quadCount, Shader.Default, Texture.Default);
+            var quadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default);
 
             var quadsBatchColor = new Vector4(_random.NextSingle(), _random.NextSingle(), _random.NextSingle(), 1.0f);
             for (var j = 0; j < _quadCount; j++)
             {
                 var position = new Vector3(_random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance), _random.Next(-_spawnDistance, _spawnDistance));
-                var size = new Vector2(_random.Next(1, 2), _random.Next(1, 2));
+                var size = new Vector2(_random.Next(1, 10), _random.Next(1, 10));
                 var rotation = new Vector3(_random.NextSingle(), _random.NextSingle(), _random.NextSingle());
 
                 var newQuad = new Quad(position, size, quadsBatchColor)
@@ -78,11 +78,12 @@ public class TestGame : Game, IDisposable
     protected override void Update(double deltaTime)
     {
         var speed = 6;
-        var superInterpolationSpeed = 100;
+        var superInterpolationSpeed = 10;
         var shiftSpeed = 40;
         var direction = Vector3.Zero;
-        var randomCubeCount = _quadCount / 100 * _randomQuadPercentage;
-        var interpolationSpeed = 0.35f;
+
+        _ = _quadCount / 100 * _randomQuadPercentage;
+        var interpolationSpeed = _interpolationSpeed;
 
         if (KeyboardState.IsKeyPressed(Keys.F11))
         {
@@ -145,28 +146,49 @@ public class TestGame : Game, IDisposable
 
         if (_isInterpolating)
         {
-            InterpolateRandomQuads(randomCubeCount, interpolationSpeed * (float)deltaTime, Vector3.Zero, _endDistance);
+            //InterpolateRandomQuads(randomCubeCount, interpolationSpeed, Vector3.Zero, _endDistance);
+            InterpolateAllQuads(interpolationSpeed, Vector3.Zero, _endDistance, (float)deltaTime);
         }
     }
 
-    private void InterpolateRandomQuads(int randomQuadCount, float interpolationSpeed, Vector3 cubePosition, int cubeSize)
+    private void InterpolateAllQuads(float interpolationSpeed, Vector3 zero, int endDistance, float deltaTime)
     {
         foreach (var quadBatch in _quadBatches)
         {
-            var randomQuads = quadBatch.Quads.TakeRandomWithIndex(randomQuadCount);
-            foreach (var quad in randomQuads)
+            var index = 0;
+            foreach (var quad in quadBatch.Quads)
             {
-                var squareDistanceToCube = SPNMath.SquareDistance(quad.quad.Position, cubePosition);
-                var isOutsideCube = squareDistanceToCube > Math.Pow(cubeSize, 2);
+                var squareDistanceToCube = SPNMath.SquareDistance(quad.Position, zero);
+                var isOutsideCube = squareDistanceToCube > Math.Pow(endDistance, 2);
                 if (isOutsideCube)
                 {
-                    quad.quad.Position = SPNMath.Lerp(quad.quad.Position, cubePosition, interpolationSpeed);
-                    quad.quad.Rotation += new Vector3(1, 0, 0f);
-                    quadBatch.InvalidatedQuads.Add((quad.index, quad.quad));
+                    quad.Position = SPNMath.Lerp(quad.Position, zero, interpolationSpeed * _random.Next(0, 2) * (float)deltaTime);
+                    quad.Rotation += new Vector3(0.55f, 0, 0) * deltaTime;
+                    quadBatch.InvalidatedQuads.Add((index, quad));
+
+                    index++;
                 }
             }
         }
     }
+
+    //private void InterpolateRandomQuads(int randomQuadCount, float interpolationSpeed, Vector3 cubePosition, int cubeSize)
+    //{
+    //    foreach (var quadBatch in _quadBatches)
+    //    {
+    //        var randomQuads = quadBatch.Quads.TakeRandomWithIndex(randomQuadCount);
+    //        foreach (var quad in randomQuads)
+    //        {
+    //            var squareDistanceToCube = SPNMath.SquareDistance(quad.quad.Position, cubePosition);
+    //            var isOutsideCube = squareDistanceToCube > Math.Pow(cubeSize, 2);
+    //            if (isOutsideCube)
+    //            {
+    //                quad.quad.Position = SPNMath.Lerp(quad.quad.Position, cubePosition, interpolationSpeed);
+    //                quadBatch.InvalidatedQuads.Add((quad.index, quad.quad));
+    //            }
+    //        }
+    //    }
+    //}
 
     protected override void Render(double deltaTime)
     {

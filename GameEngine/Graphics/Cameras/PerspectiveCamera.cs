@@ -45,15 +45,6 @@ public class PerspectiveCamera : Camera
         FieldOfView = fieldOfView;
     }
 
-    public override void UpdateViewProjectionMatrix()
-    {
-        View = Matrix4.CreateTranslation(-Position);
-        ViewProjectionMatrix = View * Projection;
-    }
-
     private void UpdateProjectionMatrix()
-    {
-        Projection = Matrix4.CreatePerspectiveFieldOfView(SPNMath.ToRadians(_fieldOfView), AspectRatio, NearPlane, FarPlane);
-        UpdateViewProjectionMatrix();
-    }
+        => Projection = Matrix4.CreatePerspectiveFieldOfView(SPNMath.ToRadians(_fieldOfView), AspectRatio, NearPlane, FarPlane);
 }

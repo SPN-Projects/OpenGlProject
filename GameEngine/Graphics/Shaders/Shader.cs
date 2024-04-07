@@ -10,9 +10,6 @@ public partial class Shader : IDisposable
 
     public Dictionary<int, int> Uniforms { get; }
 
-    public static Shader Default
-        => FromName(EngineConstants.DefaultShaderName);
-
     private readonly Dictionary<ShaderType, string> _shaderSources;
     private string? _shaderName;
     private bool _disposedValue;
@@ -24,7 +21,7 @@ public partial class Shader : IDisposable
     /// <param name="name">The name of the Shader</param>
     /// <returns>The new Shader</returns>
     /// <exception cref="Exception">Thrown when the Shader with the given name is not found, or an error occurred whilst compiling the Shader</exception>
-    public static Shader FromName(string name)
+    internal static Shader FromName(string name)
     {
         PathChecker.EnsurePath(EngineConstants.DefaultShaderPath);
         var shaderFiles = Directory.GetFiles(EngineConstants.DefaultShaderPath, name + "*");

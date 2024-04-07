@@ -111,5 +111,8 @@ public class VertexBufferObject : Buffer
     public override void Unbind()
         => GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
     public override void Dispose()
-        => GL.DeleteBuffer(Handle);
+    {
+        GL.DeleteBuffer(Handle);
+        GC.SuppressFinalize(this);
+    }
 }

@@ -10,13 +10,20 @@ public static class SPNMath
         => MathF.Max(min, MathF.Min(max, value));
 
     public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
-        => a + ((b - a) * t);
+    {
+        t = Clamp(t, 0, 1);
+        return a + ((b - a) * t);
+    }
 
     public static Vector4 Lerp(Vector4 a, Vector4 b, float t)
-        => a + ((b - a) * t);
+    {
+        t = Clamp(t, 0, 1);
+        return a + ((b - a) * t);
+    }
 
     public static double SquareDistance(Vector3 position, Vector3 cubePosition)
         => MathF.Pow(position.X - cubePosition.X, 2) + MathF.Pow(position.Y - cubePosition.Y, 2) + MathF.Pow(position.Z - cubePosition.Z, 2);
+
     public static double Distance(Vector3 position, Vector3 target)
     {
         var x = MathF.Pow(target.X - position.X, 2);

@@ -34,24 +34,33 @@ public class Texture : IDisposable
 
     public static Texture FromFile(string path)
     {
-        PathChecker.EnsureFile(path);
-
-        // Flip the image vertically, because OpenGL draws the texture from left to right, bottom to top
-        // and stbi loads the image from top to bottom
-        StbImage.stbi_set_flip_vertically_on_load(1);
-
-        var image = ImageResult.FromStream(File.OpenRead(path), ColorComponents.RedGreenBlueAlpha);
-
-        if (image == null)
+        try
         {
-            Logger.EngineLogger.Error($"Failed to load image from {path}");
-            throw new Exception("Failed to load image");
+            PathChecker.EnsureFile(path);
+
+            // Flip the image vertically, because OpenGL draws the texture from left to right, bottom to top
+            // and stbi loads the image from top to bottom
+            StbImage.stbi_set_flip_vertically_on_load(1);
+
+            var image = ImageResult.FromStream(File.OpenRead(path), ColorComponents.RedGreenBlueAlpha);
+
+            if (image == null)
+            {
+                Logger.EngineLogger.Error($"Failed to load image from {path}");
+                throw new Exception("Failed to load image");
+            }
+
+            var newTexture = new Texture(image.Width, image.Height);
+            newTexture.SetData(image.Data);
+
+            Logger.EngineLogger.Trace($"Texture loaded from {path}");
+            return newTexture;
         }
-
-        var newTexture = new Texture(image.Width, image.Height);
-        newTexture.SetData(image.Data);
-
-        return newTexture;
+        catch (Exception e)
+        {
+            Logger.EngineLogger.Error(e.Message);
+            throw new Exception(e.Message);
+        }
     }
 
     public void Bind()

@@ -2,6 +2,7 @@
 using GameEngine.Graphics.Buffers;
 using GameEngine.Graphics.Cameras;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace GameEngine.Graphics.Rendering;
 
@@ -30,7 +31,8 @@ public static class Renderer
 
         RenderData.CameraBuffer = new CameraData
         {
-            ViewProjectionMatrix = camera.ViewProjectionMatrix
+            CameraPosition = new Vector4(camera.Position),
+            ProjectionMatrix = camera.Projection,
         };
 
         RenderData.CameraUniformBuffer.SetData(RenderData.CameraBuffer);
