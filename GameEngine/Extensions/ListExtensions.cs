@@ -41,4 +41,7 @@ public static class ListExtensions
 
         return taken;
     }
+
+    public static void AddRange<T>(this List<T> list, params T[] items)
+        => list.AddRange(items);
 }

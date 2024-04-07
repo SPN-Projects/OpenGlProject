@@ -96,8 +96,6 @@ public class QuadBatch : IDisposable
     public readonly List<Quad> Quads;
     public readonly int QuadsLimit;
 
-    public List<(int, Quad)> InvalidatedQuads { get; set; }
-
     private bool _disposedValue;
 
     private VertexArrayObject? _vao;
@@ -127,7 +125,6 @@ public class QuadBatch : IDisposable
         Texture = texture;
         Shader = quadShader;
         Quads = [];
-        InvalidatedQuads = [];
 
         InitBuffers();
     }
@@ -154,7 +151,7 @@ public class QuadBatch : IDisposable
             new(ShaderDataType.Float3, "aRotation", false, 1),
             new(ShaderDataType.Float2, "aSize", false, 1),
         ]);
-        _instancedVbo = VertexBufferObject.FromBufferLayout(instancedLayout, BufferUsageHint.StaticDraw, QuadsLimit);
+        _instancedVbo = VertexBufferObject.FromBufferLayout(instancedLayout, BufferUsageHint.DynamicDraw, QuadsLimit);
         _vao.AddVertexBufferObject(_instancedVbo);
 
 
@@ -229,16 +226,12 @@ public class QuadBatch : IDisposable
         }
     }
 
-    public void Draw(Camera? camera, (int, Quad)[] invalidatedQuads)
+    public void Draw(Camera? camera)
     {
         _ = camera ?? new IdentityCamera();
 
         Shader!.Bind();
 
-        //if (invalidatedQuads.Length > 0)
-        //{
-        //    RecalculateQuadsModels(invalidatedQuads);
-        //}
         RecalculateAll();
 
         Texture?.Bind();

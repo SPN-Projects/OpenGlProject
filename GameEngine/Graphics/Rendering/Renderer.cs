@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using GameEngine.Graphics.Buffers;
 using GameEngine.Graphics.Cameras;
+using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
@@ -8,22 +9,31 @@ namespace GameEngine.Graphics.Rendering;
 
 public static class Renderer
 {
-    public static RenderData? RenderData { get; private set; }
-    public static void Init(EnableCap? enableCaps = null)
+    internal static RenderData? RenderData { get; private set; }
+    public static void Init(Vector4 clearColor, ClearBufferMask clearBufferMask, EnableCap? enableCaps = null)
     {
         if (enableCaps.HasValue)
         {
             GL.Enable(enableCaps.Value);
         }
 
+        GL.ClearColor(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W);
+
         RenderData = new RenderData
         {
-            CameraUniformBuffer = new UniformBuffer(Marshal.SizeOf(typeof(CameraData)), 0)
+            CameraUniformBuffer = new UniformBuffer(Marshal.SizeOf(typeof(CameraData)), 0),
+            _clearBufferMask = clearBufferMask,
         };
     }
 
     public static void BeginScene(Camera camera)
     {
+        if (RenderData is not null and { _isCleared: false })
+        {
+            Logger.EngineLogger.Warning("Scene has not been cleared.");
+            throw new InvalidOperationException("Scene has not been cleared.");
+        }
+
         if (camera is null || RenderData?.CameraUniformBuffer is null)
         {
             return;
@@ -61,5 +71,19 @@ public static class Renderer
     {
         RenderData!.VertexCount = 0;
         RenderData!.IndexCount = 0;
+
+        RenderData._isCleared = false;
+    }
+
+    public static void ClearScene()
+    {
+        if (RenderData is null)
+        {
+            Logger.EngineLogger.Warning("RenderData is not initialized.");
+            throw new InvalidOperationException("RenderData is not initialized.");
+        }
+
+        GL.Clear(RenderData._clearBufferMask);
+        RenderData._isCleared = true;
     }
 }
