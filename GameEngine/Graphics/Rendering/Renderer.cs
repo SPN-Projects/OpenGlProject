@@ -12,19 +12,13 @@ public static class Renderer
 {
     internal static RenderData? RenderData { get; private set; }
 
-    public static void Init(Vector4 clearColor, ClearBufferMask clearBufferMask, EnableCap? enableCaps = null)
+    internal static void Init()
     {
-        if (enableCaps.HasValue)
-        {
-            GL.Enable(enableCaps.Value);
-        }
-
-        GL.ClearColor(clearColor.X, clearColor.Y, clearColor.Z, clearColor.W);
-
         RenderData = new RenderData
         {
             CameraUniformBuffer = new UniformBuffer(Marshal.SizeOf(typeof(CameraData)), 0),
-            _clearBufferMask = clearBufferMask,
+            _currentClearBufferMasks = [],
+            _currentEnableCaps = [],
         };
     }
 
@@ -52,11 +46,6 @@ public static class Renderer
         ResetBatch();
     }
 
-    public static void DrawSprite(Sprite sprite, Vector3 position, Vector2 size, Vector4 color)
-    {
-
-    }
-
     public static void EndScene()
         => Flush();
 
@@ -82,7 +71,33 @@ public static class Renderer
         RenderData._isCleared = false;
     }
 
-    public static void ClearScene()
+    public static void Enable(params EnableCap[] enableCap)
+    {
+        if(enableCap.Any(ec => RenderData!._currentEnableCaps.Contains(ec)))
+            throw new Exception($"EnableCap {enableCap} was tried to be enabled, but was already enabled before!");
+
+        RenderData!._currentEnableCaps.AddRange(RenderData._currentEnableCaps.Except(enableCap));
+    }
+
+    public static void Disable(params EnableCap[] enableCaps)
+    {
+        foreach(var enableCap in enableCaps)
+        {
+            if (RenderData!._currentEnableCaps.Contains(enableCap))
+                throw new Exception($"EnableCap {enableCap} was tried to be removed, but was not enabled before!");
+
+            RenderData!._currentEnableCaps.Remove(enableCap);
+        }
+
+        UpdateEnableCap();
+    }
+
+    private static void UpdateEnableCap()
+    {
+        GL.Enable(RenderData!._currentEnableCaps.Aggregate((currentEnableCap, nextEnableCap) => currentEnableCap | nextEnableCap));
+    }
+
+    public static void ClearScene(params ClearBufferMask[] clearBufferMask)
     {
         if (RenderData is null)
         {
@@ -90,7 +105,14 @@ public static class Renderer
             throw new InvalidOperationException("RenderData is not initialized.");
         }
 
-        GL.Clear(RenderData._clearBufferMask);
+        var combinedMask = clearBufferMask.Aggregate((currentMask, nextMask) => currentMask | nextMask);
+
+        GL.Clear(combinedMask);
         RenderData._isCleared = true;
+    }
+
+    public static void ClearColor(float r, float g, float b, float a)
+    {
+        GL.ClearColor(r, g, b, a);
     }
 }

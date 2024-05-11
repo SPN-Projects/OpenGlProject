@@ -1,4 +1,5 @@
-﻿using GameEngine.Logging;
+﻿using GameEngine.Graphics.Rendering;
+using GameEngine.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -27,6 +28,8 @@ public abstract class Game
 
         NativeWindow = new GameWindow(defaultGameWindowSettings, defaultNativeWindowSettings);
         // Window Event Handler
+
+        Renderer.Init();
         NativeWindow.Load += OnLoad;
 
         NativeWindow.UpdateFrame += (args) =>

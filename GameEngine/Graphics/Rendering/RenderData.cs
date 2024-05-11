@@ -21,11 +21,13 @@ internal class RenderData
 
     internal bool _isCleared = false;
 
-    internal ClearBufferMask _clearBufferMask;
+    internal required List<ClearBufferMask> _currentClearBufferMasks { get; set; }
+    internal required List<EnableCap> _currentEnableCaps { get; set; }
+
 
     // Camera
     public CameraData CameraBuffer { get; internal set; }
-    public UniformBuffer? CameraUniformBuffer { get; internal set; }
+    public required UniformBuffer CameraUniformBuffer { get; internal set; }
 
     public RenderData()
     {

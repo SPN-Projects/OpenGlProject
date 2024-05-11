@@ -38,7 +38,8 @@ public class TestGame : Game, IDisposable
 
         ToggleFullscreen(Program.GameConfig!.Fullscreen);
 
-        Renderer.Init(new Vector4(0.2f, 0.3f, 0.3f, 1.0f), ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit, EnableCap.DepthTest | EnableCap.Blend);
+        Renderer.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        Renderer.Enable(EnableCap.DepthTest, EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         var sceneQuadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default2D);
@@ -116,7 +117,7 @@ public class TestGame : Game, IDisposable
 
     protected override void Render(double deltaTime)
     {
-        Renderer.ClearScene();
+        Renderer.ClearScene(ClearBufferMask.ColorBufferBit, ClearBufferMask.DepthBufferBit);
         Renderer.BeginScene(_camera!);
 
         foreach (var quadBatch in _quadBatches)
