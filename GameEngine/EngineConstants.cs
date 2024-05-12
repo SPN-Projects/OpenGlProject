@@ -31,7 +31,8 @@ public static class EngineConstants
     public const string DefaultFragmentShaderPath = "Resources/Shaders/Default.frag";
 
     // Textures
-    public const string DefaultTexturePath = "Resources/Textures/Default.jpg";
+    public const string DefaultTexturePath = "Resources/Textures/Wall_1m.png";
+    public const string DefaultChessTexturePath = "Resources/Textures/Chess.png";
     public const string WhiteTextureName = "White";
 
     // Renderer

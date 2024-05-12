@@ -34,16 +34,11 @@ public class TestGame : Game, IDisposable
     {
         Logger.GameLogger.Info("Loading Game...");
 
-        ToggleWindowVisibility(true);
-
-        ToggleFullscreen(Program.GameConfig!.Fullscreen);
-
         Renderer.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        Renderer.Enable(EnableCap.DepthTest, EnableCap.Blend);
-        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        Renderer.Enable(EnableCap.DepthTest);
 
-        var sceneQuadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default2D);
-        var playersQuadBatch = new QuadBatch(1, ShaderManager.Default, TextureManager.Default2D);
+        var sceneQuadBatch = new QuadBatch(_quadCount, ShaderManager.Default, TextureManager.Default2DWall);
+        var playersQuadBatch = new QuadBatch(1, ShaderManager.Default, TextureManager.Default2DChess);
 
         var scenePlaneQuad = new Quad(new Vector3(0, 0, 0), _scenePlaneSize, new Vector4(1.0f));
         sceneQuadBatch.AddQuad(scenePlaneQuad);
@@ -59,6 +54,10 @@ public class TestGame : Game, IDisposable
         {
             Position = new Vector3(0, 0, 50)
         };
+
+        Logger.GameLogger.Info("Finished Loading!");
+        ToggleWindowVisibility(true);
+        ToggleFullscreen(Program.GameConfig!.Fullscreen);
     }
 
     protected override void OnUnload()
